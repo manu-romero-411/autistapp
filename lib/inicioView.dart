@@ -1,37 +1,113 @@
 import 'dart:convert';
 import 'dart:io';
-
+import 'package:autistapp/menuLateral.dart';
+import 'package:autistapp/tarea.dart';
+import 'package:autistapp/tareasView.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'dart:async';
 
-class MyWidget extends StatefulWidget {
-  const MyWidget();
+import 'common.dart';
+
+class PantallaInicio extends StatefulWidget {
+  const PantallaInicio(
+      {super.key, required this.theme, required this.onThemeChanged});
+
+  final String theme;
+  final ValueChanged<String> onThemeChanged;
+
   @override
-  _MyWidgetState createState() => _MyWidgetState();
+  PantallaInicioView createState() =>
+      PantallaInicioView(theme: theme, onThemeChanged: onThemeChanged);
 }
 
-class _MyWidgetState extends State<MyWidget> {
-  Map<String, dynamic> data = {
-    'checkedItems': {},
-    'tasks': [],
-  };
+class PantallaInicioView extends State<PantallaInicio> {
+  PantallaInicioView({required this.theme, required this.onThemeChanged});
 
-  bool editing = false;
+  final String theme;
+  final ValueChanged<String> onThemeChanged;
 
   @override
   void initState() {
     super.initState();
-    _loadData();
   }
 
-  Future<void> _loadData() async {
-    final file = await _getFile();
-    if (await file.exists()) {
-      final contents = await file.readAsString();
-      setState(() {
-        data = jsonDecode(contents);
-      });
-    }
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        elevation: 0,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+      ),
+      drawer: MenuLateral(theme: theme, onThemeChanged: onThemeChanged),
+      floatingActionButton: BotonFlotante(),
+      body: Stack(
+        children: [
+          AnimatedContainer(
+            duration: const Duration(seconds: 1),
+          ),
+          const Positioned(
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Padding(
+              padding: EdgeInsets.only(top: 100),
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: Column(
+                  children: [
+                    Text(
+                      '¡Hola, nombre!',
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: 200,
+                      child: LinearProgressIndicator(value: 0.14),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          ListaTarjeta(),
+        ],
+      ),
+    );
+  }
+}
+
+class BotonFlotante extends StatefulWidget {
+  @override
+  _BotonFlotanteState createState() => _BotonFlotanteState();
+}
+
+class _BotonFlotanteState extends State<BotonFlotante> {
+  Map<String, dynamic> data = {
+    'tasks': [],
+  };
+
+  void _addTask(Map<String, dynamic> task) {
+    setState(() async {
+      data['tasks'] = data['tasks'] ?? [];
+      data['tasks'].add(task);
+      final file = await _getFile();
+      await file.writeAsString(jsonEncode(data));
+    });
   }
 
   Future<File> _getFile() async {
@@ -39,192 +115,22 @@ class _MyWidgetState extends State<MyWidget> {
     return File('${directory.path}/data.json');
   }
 
-  Future<void> _saveData() async {
-    final file = await _getFile();
-    await file.writeAsString(jsonEncode(data));
-  }
-
-  void _addTask(Map<String, dynamic> task) {
-    setState(() {
-      data['tasks'] = data['tasks'] ?? [];
-      data['tasks'].add(task);
-      _saveData();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final checkedItems = data['checkedItems'] ?? {};
-    final tasks = data['tasks'] ?? [];
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('autistApp'),
-        actions: [
-          IconButton(
-            icon: Icon(editing ? Icons.done : Icons.edit),
-            onPressed: () {
-              setState(() {
-                editing = !editing;
-              });
-            },
-          ),
-        ],
-      ),
-      body: ListView.builder(
-        itemCount: tasks.length,
-        itemBuilder: (context, index) {
-          final task = tasks[index];
-          if (task['completed'] == 1) {
-            return SizedBox.shrink();
-          }
-          return editing
-              ? ListTile(
-                  title: Text(task['name']),
-                  subtitle: Text('${task['scope']} - Próxima vez: ...'),
-                  leading: IconButton(
-                    icon: Icon(Icons.edit),
-                    onPressed: () {
-                      // Editar tarea
-                    },
-                  ),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () {
-                      // Eliminar tarea
-                    },
-                  ),
-                )
-              : CheckboxListTile(
-                  title: Text(task['name']),
-                  subtitle: Text('${task['scope']} - Próxima vez: ...'),
-                  value: task['completed'] == 1,
-                  onChanged: (checked) {
-                    setState(() {
-                      task['completed'] = checked == true ? 1 : 0;
-                      _saveData();
-                    });
-                  },
-                );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AddTaskScreen()),
-          );
-          if (result != null) {
-            _addTask(result);
-          }
-        },
-      ),
-    );
-  }
-}
-
-class AddTaskScreen extends StatefulWidget {
-  @override
-  _AddTaskScreenState createState() => _AddTaskScreenState();
-}
-
-class _AddTaskScreenState extends State<AddTaskScreen> {
-  final nameController = TextEditingController();
-  String scope = 'Académico/Laboral';
-  bool repeats = false;
-  final intervalController = TextEditingController();
-  String intervalUnit = 'días';
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Agregar tarea'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.save),
-            onPressed: () {
-              final name = nameController.text;
-              final interval = int.tryParse(intervalController.text) ?? -1;
-              if (name.isNotEmpty &&
-                  scope != null &&
-                  (!repeats || (interval > -1 && intervalUnit != null))) {
-                Navigator.pop(context, {
-                  'name': name,
-                  'scope': scope,
-                  'repeats': repeats,
-                  'interval': interval,
-                  'intervalUnit': intervalUnit,
-                  'completed': 0,
-                });
-              }
-            },
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: EdgeInsets.all(16),
-        children: [
-          TextField(
-            controller: nameController,
-            decoration: InputDecoration(labelText: 'Nombre de la tarea'),
-          ),
-          DropdownButton<String>(
-            value: scope,
-            hint: Text('Ámbito vital'),
-            onChanged: (value) {
-              setState(() {
-                scope = value!;
-              });
-            },
-            items: [
-              'Académico/Laboral',
-              'Vida social',
-              'Vida amorosa',
-              'Tareas de casa',
-              'Papeleos',
-              'Vida personal',
-            ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-          ),
-          CheckboxListTile(
-            title: Text('¿Se repite?'),
-            value: repeats,
-            onChanged: (value) {
-              setState(() {
-                repeats = value!;
-              });
-            },
-          ),
-          if (repeats)
-            Row(
-              children: [
-                Text('Cada'),
-                SizedBox(width: 8),
-                Expanded(
-                  child: TextField(
-                    controller: intervalController,
-                    keyboardType: TextInputType.number,
-                    decoration:
-                        InputDecoration(labelText: 'Intervalo de repetición'),
-                  ),
-                ),
-                SizedBox(width: 8),
-                DropdownButton<String>(
-                  value: intervalUnit,
-                  hint: Text('Unidad de tiempo'),
-                  onChanged: (value) {
-                    setState(() {
-                      intervalUnit = value!;
-                    });
-                  },
-                  items: ['días', 'semanas', 'meses']
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-                ),
-              ],
-            ),
-        ],
-      ),
+    return SpeedDial(
+      animatedIcon: AnimatedIcons.menu_close,
+      children: [
+        SpeedDialChild(
+          child: const Icon(Icons.edit),
+          label: 'Nueva tarea',
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => EditarTarea()),
+            ).then((_) => setState(() {}));
+          },
+        ),
+      ],
     );
   }
 }

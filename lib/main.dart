@@ -1,88 +1,54 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:intl/date_symbol_data_local.dart';
+
+import 'package:autistapp/tarea.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
+import 'common.dart';
 import 'inicioView.dart';
+import 'apuntes/audio/apuntesAudio.dart';
+import 'settings.dart';
+import 'menuLateral.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
 /// Flutter code sample for [BottomNavigationBar].
 
-void main() => runApp(const BottomNavigationBarExampleApp());
-
-class BottomNavigationBarExampleApp extends StatelessWidget {
-  const BottomNavigationBarExampleApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: _mainView(),
-    );
-  }
+void main() {
+  initializeDateFormatting('es_ES', null);
+  runApp(const AutistAppMain());
 }
 
-class _mainView extends StatefulWidget {
-  const _mainView();
-
+class AutistAppMain extends StatefulWidget {
+  const AutistAppMain({super.key});
   @override
-  State<_mainView> createState() => _mainViewController();
+  _AutistAppMainState createState() => _AutistAppMainState();
 }
 
-class _mainViewController extends State<_mainView> {
-  int _selectedIndex = 0;
-  static const TextStyle optionStyle =
-      TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
+class _AutistAppMainState extends State<AutistAppMain> {
+  String _theme = 'dark';
 
-  /* Definición de las vistas de cada pestaña*/
-  static const List<Widget> _widgetOptions = <Widget>[
-    MyWidget(),
-    Text(
-      'Index 1: j',
-      style: optionStyle,
-    ),
-    Text(
-      'Index 2: School',
-      style: optionStyle,
-    ),
-    Text(
-      'Index 3: Settings',
-      style: optionStyle,
-    ),
-  ];
+  String get theme => _theme;
 
-  void _onItemTapped(int index) {
+  set theme(String value) {
     setState(() {
-      _selectedIndex = index;
+      _theme = value;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Inicio',
-            backgroundColor: Colors.red,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.task),
-            label: 'Mis tareas',
-            backgroundColor: Colors.green,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.edit),
-            label: 'Apuntes',
-            backgroundColor: Colors.purple,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.help),
-            label: '¡Ayuda!',
-            backgroundColor: Colors.pink,
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: const Color.fromARGB(255, 0, 221, 255),
-        onTap: _onItemTapped,
+    return MaterialApp(
+      theme: theme == 'light'
+          ? ThemeData.light()
+          : theme == 'dark'
+              ? ThemeData.dark()
+              : null,
+      //home: ListaVoz(),
+      home: PantallaInicio(
+        theme: _theme,
+        onThemeChanged: (value) => theme = value,
       ),
     );
   }
