@@ -1,8 +1,9 @@
-import 'dart:convert';
+/*import 'dart:convert';
 import 'dart:io';
+import 'package:autistapp/InicioTareas.dart';
 import 'package:autistapp/menuLateral.dart';
 import 'package:autistapp/tarea.dart';
-import 'package:autistapp/tareasView.dart';
+import 'package:autistapp/tareas/EditarTarea.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
@@ -52,7 +53,6 @@ class PantallaInicioView extends State<PantallaInicio> {
         ),
       ),
       drawer: MenuLateral(theme: theme, onThemeChanged: onThemeChanged),
-      floatingActionButton: BotonFlotante(),
       body: Stack(
         children: [
           AnimatedContainer(
@@ -84,36 +84,21 @@ class PantallaInicioView extends State<PantallaInicio> {
               ),
             ),
           ),
-          ListaTarjeta(),
         ],
       ),
     );
   }
 }
 
-class BotonFlotante extends StatefulWidget {
+class BotonFlotanteInicio extends StatefulWidget {
   @override
-  _BotonFlotanteState createState() => _BotonFlotanteState();
+  _BotonFlotanteInicioState createState() => _BotonFlotanteInicioState();
 }
 
-class _BotonFlotanteState extends State<BotonFlotante> {
+class _BotonFlotanteInicioState extends State<BotonFlotanteInicio> {
   Map<String, dynamic> data = {
     'tasks': [],
   };
-
-  void _addTask(Map<String, dynamic> task) {
-    setState(() async {
-      data['tasks'] = data['tasks'] ?? [];
-      data['tasks'].add(task);
-      final file = await _getFile();
-      await file.writeAsString(jsonEncode(data));
-    });
-  }
-
-  Future<File> _getFile() async {
-    final directory = await getApplicationDocumentsDirectory();
-    return File('${directory.path}/data.json');
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +111,7 @@ class _BotonFlotanteState extends State<BotonFlotante> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => EditarTarea()),
+              MaterialPageRoute(builder: (context) => const EditorTareas()),
             ).then((_) => setState(() {}));
           },
         ),
@@ -134,3 +119,4 @@ class _BotonFlotanteState extends State<BotonFlotante> {
     );
   }
 }
+*/

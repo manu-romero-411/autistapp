@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:diacritic/diacritic.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:share_plus/share_plus.dart';
 
 class NotaVoz {
   String id;
@@ -36,6 +38,10 @@ class ListaNotasVoz {
   Future<File> get _localFile async {
     final directory = await getApplicationDocumentsDirectory();
     return File('${directory.path}/autistapp_audio_notes.json');
+  }
+
+  List<NotaVoz> toList() {
+    return notas;
   }
 
   Future<void> cargarDatos() async {
@@ -122,13 +128,49 @@ class ListaVoz extends StatefulWidget {
 
 class _ListaVozState extends State<ListaVoz> {
   final listaNotasVoz = ListaNotasVoz();
+  List<NotaVoz> busqueda = [];
 
   @override
   void initState() {
-    super.initState();
     listaNotasVoz.cargarDatos().then((_) {
-      setState(() {});
+      setState(() {
+        busqueda = listaNotasVoz.toList();
+      });
     });
+    super.initState();
+  }
+
+  void _filtrarBusqueda(String valor) {
+    setState(() {
+      if (valor.isEmpty) {
+        busqueda = listaNotasVoz.toList();
+      } else {
+        busqueda = listaNotasVoz
+            .toList()
+            .where((nota) => _operadorBusqueda(nota, removeDiacritics(valor)))
+            .toList();
+      }
+    });
+  }
+
+  bool _operadorBusqueda(NotaVoz nota, String valor) {
+    if (removeDiacritics(nota.descripcion.toLowerCase()).contains(valor))
+      return true;
+    //if (nota.texto.toLowerCase().contains(valor)) return true;
+    if ((DateFormat('yyyy-MM-dd', "es_ES").format(nota.fecha).contains(valor)))
+      return true;
+    if (valor.toLowerCase().contains("acad") ||
+        valor.toLowerCase().contains("laboral")) {
+      if (nota.ambito == 0) return true;
+    }
+    if (valor.toLowerCase().contains("social")) {
+      if (nota.ambito == 1) return true;
+    }
+
+    if (valor.toLowerCase().contains("personal")) {
+      if (nota.ambito == 2) return true;
+    }
+    return false;
   }
 
   @override
@@ -137,30 +179,50 @@ class _ListaVozState extends State<ListaVoz> {
       appBar: AppBar(
         title: const Text('Lista de notas de voz'),
       ),
-      body: ListView.builder(
-        itemCount: listaNotasVoz.notas.length,
-        itemBuilder: (context, index) {
-          final reversedIndex = listaNotasVoz.notas.length - 1 - index;
-          final nota = listaNotasVoz.notas[reversedIndex];
-          return ListTile(
-            title: Text(nota.descripcion),
-            subtitle: Text(DateFormat('yyyy-MM-dd - EEEE - HH:mm:ss', "es_ES")
-                .format(nota.fecha)),
-            onTap: () {
-              Navigator.of(context)
-                  .push(
-                MaterialPageRoute(
-                  builder: (context) => GrabadorAudio(nota: nota),
-                ),
-              )
-                  .then((_) {
-                listaNotasVoz.cargarDatos().then((_) {
-                  setState(() {});
-                });
-              });
-            },
-          );
-        },
+      body: Column(
+        children: [
+          const SizedBox(height: 20),
+          TextField(
+            onChanged: (value) => _filtrarBusqueda(value),
+            decoration: const InputDecoration(
+                labelText: "Busca notas...", suffixIcon: Icon(Icons.search)),
+          ),
+          const SizedBox(
+            height: 20,
+          ),
+          Expanded(
+            child: ListView.builder(
+              scrollDirection: Axis.vertical,
+              shrinkWrap: true,
+              itemCount: busqueda.length,
+              itemBuilder: (context, index) {
+                final reversedIndex = busqueda.length - 1 - index;
+                final nota = busqueda[reversedIndex];
+                return ListTile(
+                  title: Text(nota.descripcion),
+                  subtitle: Text(
+                      DateFormat('yyyy-MM-dd - EEEE - HH:mm:ss', "es_ES")
+                          .format(nota.fecha)),
+                  onTap: () {
+                    Navigator.of(context)
+                        .push(
+                      MaterialPageRoute(
+                        builder: (context) => GrabadorAudio(nota: nota),
+                      ),
+                    )
+                        .then((_) {
+                      listaNotasVoz.cargarDatos().then((_) {
+                        setState(() {
+                          busqueda = listaNotasVoz.toList();
+                        });
+                      });
+                    });
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: "btn3",
@@ -174,7 +236,9 @@ class _ListaVozState extends State<ListaVoz> {
           )
               .then((_) {
             listaNotasVoz.cargarDatos().then((_) {
-              setState(() {});
+              setState(() {
+                busqueda = listaNotasVoz.toList();
+              });
             });
           });
         },
@@ -421,93 +485,115 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
                 Navigator.of(context).pop();
               },
             ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            TextField(
-              controller: _descController,
-              maxLength: 100,
-              decoration: const InputDecoration(
-                labelText: 'Descripción',
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.sentiment_very_satisfied),
-                  color: _mood == 2 ? Colors.green : null,
-                  onPressed: () {
-                    setState(() {
-                      _mood = 2;
-                    });
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.sentiment_neutral),
-                  color: _mood == 1 ? Colors.yellow : null,
-                  onPressed: () {
-                    setState(() {
-                      _mood = 1;
-                    });
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.sentiment_very_dissatisfied),
-                  color: _mood == 0 ? Colors.red : null,
-                  onPressed: () {
-                    setState(() {
-                      _mood = 0;
-                    });
-                  },
-                ),
-              ],
-            ),
-            DropdownButton<int>(
-              value: _ambito,
-              items: const [
-                DropdownMenuItem(
-                  value: 0,
-                  child: Text('⚙️ Académico/Laboral'),
-                ),
-                DropdownMenuItem(
-                  value: 1,
-                  child: Text('🗣 Social'),
-                ),
-                DropdownMenuItem(
-                  value: 2,
-                  child: Text('😇 Personal'),
-                ),
-              ],
-              onChanged: (value) {
-                if (widget.nota != null && value != null) {
-                  setState(() {
-                    _ambito = value;
-                  });
-                }
+          if (widget.nota != null)
+            IconButton(
+              icon: const Icon(Icons.share),
+              onPressed: () async {
+                print('recordFilePath ${widget.nota?.audioFileName}');
+                File file = File(widget.nota!.audioFileName);
+                await Share.shareXFiles(
+                    [XFile(Uri.parse(widget.nota!.audioFileName).toString())]);
               },
             ),
-            Align(
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text(
-                    '${elapsedTime.inHours}:${elapsedTime.inMinutes.remainder(60).toString().padLeft(2, '0')}:${(elapsedTime.inSeconds.remainder(60)).toString().padLeft(2, '0')}.${(elapsedTime.inMilliseconds.remainder(1000) / 10).floor().toString().padLeft(2, '0')}',
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontFamily: 'Segment7',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ],
-              ),
+          if (widget.nota != null)
+            IconButton(
+              icon: const Icon(Icons.save),
+              onPressed: () {
+                widget.nota!.descripcion = _descController.text;
+                widget.nota!.ambito = _ambito;
+                widget.nota!.mood = _mood;
+
+                listaNotasVoz.agregarNota(widget.nota!.id, audioPath,
+                    _descController.text, _mood, _ambito);
+                Navigator.pop(context);
+              },
             ),
-          ],
-        ),
+        ],
+      ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          TextField(
+            controller: _descController,
+            maxLength: 100,
+            decoration: const InputDecoration(
+              labelText: 'Descripción',
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.sentiment_very_satisfied),
+                color: _mood == 2 ? Colors.green : null,
+                onPressed: () {
+                  setState(() {
+                    _mood = 2;
+                  });
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.sentiment_neutral),
+                color:
+                    _mood == 1 ? const Color.fromARGB(255, 255, 190, 59) : null,
+                onPressed: () {
+                  setState(() {
+                    _mood = 1;
+                  });
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.sentiment_very_dissatisfied),
+                color: _mood == 0 ? Colors.red : null,
+                onPressed: () {
+                  setState(() {
+                    _mood = 0;
+                  });
+                },
+              ),
+            ],
+          ),
+          DropdownButton<int>(
+            value: _ambito,
+            items: const [
+              DropdownMenuItem(
+                value: 0,
+                child: Text('⚙️ Académico/Laboral'),
+              ),
+              DropdownMenuItem(
+                value: 1,
+                child: Text('🗣 Social'),
+              ),
+              DropdownMenuItem(
+                value: 2,
+                child: Text('😇 Personal'),
+              ),
+            ],
+            onChanged: (value) {
+              if (widget.nota != null && value != null) {
+                setState(() {
+                  _ambito = value;
+                });
+              }
+            },
+          ),
+          Align(
+            alignment: Alignment.center,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  '${elapsedTime.inHours}:${elapsedTime.inMinutes.remainder(60).toString().padLeft(2, '0')}:${(elapsedTime.inSeconds.remainder(60)).toString().padLeft(2, '0')}.${(elapsedTime.inMilliseconds.remainder(1000) / 10).floor().toString().padLeft(2, '0')}',
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontFamily: 'Segment7',
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
@@ -516,7 +602,7 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
               children: [
                 if (isPlaying)
                   Positioned(
-                    bottom: 210,
+                    bottom: 144,
                     right: 16,
                     child: FloatingActionButton(
                       heroTag: "audioSpeed",
@@ -526,7 +612,7 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
                   ),
                 if (isPlaying)
                   Positioned(
-                    bottom: 144,
+                    bottom: 80,
                     right: 16,
                     child: FloatingActionButton(
                         heroTag: "audioStop",
@@ -534,7 +620,7 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
                         child: Icon(Icons.stop)),
                   ),
                 Positioned(
-                  bottom: 80,
+                  bottom: 16,
                   right: 16,
                   child: FloatingActionButton(
                     heroTag: "audioPlay",
@@ -552,23 +638,6 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
                     child: isPlaying
                         ? const Icon(Icons.pause)
                         : const Icon(Icons.play_arrow),
-                  ),
-                ),
-                Positioned(
-                  bottom: 16,
-                  right: 16,
-                  child: FloatingActionButton(
-                    heroTag: "audioSave",
-                    onPressed: () {
-                      widget.nota!.descripcion = _descController.text;
-                      widget.nota!.ambito = _ambito;
-                      widget.nota!.mood = _mood;
-
-                      listaNotasVoz.agregarNota(widget.nota!.id, audioPath,
-                          _descController.text, _mood, _ambito);
-                      Navigator.pop(context);
-                    },
-                    child: const Icon(Icons.save),
                   ),
                 ),
               ],

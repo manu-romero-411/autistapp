@@ -1,7 +1,5 @@
 import 'package:autistapp/apuntes/audio/apuntesAudio.dart';
 import 'package:autistapp/apuntes/texto/apuntesTexto.dart';
-
-import 'settings.dart';
 import 'package:flutter/material.dart';
 
 class MenuLateral extends StatefulWidget {
