@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:autistapp/InicioTareas.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz;
 
-/// Flutter code sample for [BottomNavigationBar].
-
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   initializeDateFormatting('es_ES', null);
+  tz.initializeTimeZones();
   runApp(const AutistAppMain());
 }
 
@@ -34,7 +36,6 @@ class _AutistAppMainState extends State<AutistAppMain> {
           : theme == 'dark'
               ? ThemeData.dark()
               : null,
-      //home: ListaVoz(),
       home: VistaTareas(
         theme: _theme,
         onThemeChanged: (value) => theme = value,

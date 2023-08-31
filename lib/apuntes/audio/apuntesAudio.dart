@@ -33,15 +33,18 @@ class NotaVoz {
 }
 
 class ListaNotasVoz {
-  List<NotaVoz> notas = [];
+  List<NotaVoz> _notas = [];
 
+  get notas => _notas;
+
+  set notas(value) => _notas = value;
   Future<File> get _localFile async {
     final directory = await getApplicationDocumentsDirectory();
     return File('${directory.path}/autistapp_audio_notes.json');
   }
 
   List<NotaVoz> toList() {
-    return notas;
+    return _notas;
   }
 
   Future<void> cargarDatos() async {
@@ -50,7 +53,7 @@ class ListaNotasVoz {
       if (await file.exists()) {
         final contents = await file.readAsString();
         final data = jsonDecode(contents);
-        notas = List<NotaVoz>.from(data['voiceNotes'].map((x) => NotaVoz(
+        _notas = List<NotaVoz>.from(data['voiceNotes'].map((x) => NotaVoz(
             id: x['id'],
             audioFileName: x['audioFileName'],
             fecha: DateTime.parse(x['fecha']),
@@ -65,10 +68,36 @@ class ListaNotasVoz {
     }
   }
 
+  Future<void> cargarDatosPorFecha(String fecha) async {
+    List<NotaVoz> notasFec = [];
+    try {
+      final file = await _localFile;
+      if (await file.exists()) {
+        final contents = await file.readAsString();
+        final data = jsonDecode(contents);
+        List<NotaVoz> notasFec = List<NotaVoz>.from(data['voiceNotes']
+            .where((x) => (DateFormat("yyyy-MM-dd")
+                .format(DateTime.parse(x['fecha']))
+                .contains(fecha)))
+            .map((x) => NotaVoz(
+                id: x['id'],
+                audioFileName: x['audioFileName'],
+                fecha: DateTime.parse(x['fecha']),
+                descripcion: x['descripcion'],
+                mood: x['mood'],
+                ambito: x['ambito'])));
+        _notas = notasFec;
+      }
+    } catch (e) {
+      print('Error al cargar datos: $e');
+    }
+    //return notasFec;
+  }
+
   Future<File> guardarDatos() async {
     final file = await _localFile;
     return file.writeAsString(jsonEncode({
-      'voiceNotes': List<dynamic>.from(notas.map((x) => {
+      'voiceNotes': List<dynamic>.from(_notas.map((x) => {
             'id': x.id,
             'audioFileName': x.audioFileName,
             'fecha': x.fecha.toIso8601String(),
@@ -82,12 +111,12 @@ class ListaNotasVoz {
   void agregarNota(String uuid, String audioFileName, String descripcion,
       int mood, int ambito) {
     try {
-      NotaVoz notaExistente = notas.firstWhere((nota) => nota.id == uuid);
+      NotaVoz notaExistente = _notas.firstWhere((nota) => nota.id == uuid);
       notaExistente.descripcion = descripcion;
       notaExistente.mood = mood;
       notaExistente.ambito = ambito;
     } catch (e) {
-      notas.add(NotaVoz(
+      _notas.add(NotaVoz(
         id: uuid,
         audioFileName: audioFileName,
         fecha: DateTime.now(),
@@ -100,23 +129,23 @@ class ListaNotasVoz {
   }
 
   NotaVoz getNota(int index) {
-    return notas[index];
+    return _notas[index];
   }
 
   void editarNota(int index, String desc, int mood, int ambito) {
-    notas[index].descripcion = desc;
-    notas[index].mood = mood;
-    notas[index].ambito = ambito;
+    _notas[index].descripcion = desc;
+    _notas[index].mood = mood;
+    _notas[index].ambito = ambito;
   }
 
   void eliminarNota(String id) {
-    final nota = notas.firstWhere((nota) => nota.id == id);
+    final nota = _notas.firstWhere((nota) => nota.id == id);
     final uri = Uri.parse(nota.audioFileName);
     final file = File(uri.toFilePath());
     file.delete().catchError((e) {
       print('Error al eliminar el archivo: $e');
     });
-    notas.removeWhere((nota) => nota.id == id);
+    _notas.removeWhere((nota) => nota.id == id);
     guardarDatos();
   }
 }
@@ -184,8 +213,12 @@ class _ListaVozState extends State<ListaVoz> {
           const SizedBox(height: 20),
           TextField(
             onChanged: (value) => _filtrarBusqueda(value),
-            decoration: const InputDecoration(
-                labelText: "Busca notas...", suffixIcon: Icon(Icons.search)),
+            decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16.0),
+                ),
+                labelText: "Busca notas...",
+                suffixIcon: Icon(Icons.search)),
           ),
           const SizedBox(
             height: 20,
@@ -332,7 +365,7 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
     try {
       if (await audioRecord.hasPermission()) {
         await audioRecord.start(
-          bitRate: 16,
+          bitRate: 128000, // by default
         );
         setState(() {
           isRecording = true;
@@ -516,40 +549,53 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
           TextField(
             controller: _descController,
             maxLength: 100,
-            decoration: const InputDecoration(
-              labelText: 'Descripción',
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              labelText: "Título",
             ),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              IconButton(
-                icon: const Icon(Icons.sentiment_very_satisfied),
-                color: _mood == 2 ? Colors.green : null,
-                onPressed: () {
-                  setState(() {
-                    _mood = 2;
-                  });
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.sentiment_neutral),
-                color:
-                    _mood == 1 ? const Color.fromARGB(255, 255, 190, 59) : null,
-                onPressed: () {
-                  setState(() {
-                    _mood = 1;
-                  });
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.sentiment_very_dissatisfied),
-                color: _mood == 0 ? Colors.red : null,
-                onPressed: () {
+              FloatingActionButton(
+                backgroundColor: _mood == 0
+                    ? Colors.green
+                    : Color.fromARGB(255, 212, 222, 219),
+                heroTag: "feliz",
+                onPressed: () async {
                   setState(() {
                     _mood = 0;
                   });
                 },
+                child: const Text("😄", style: TextStyle(fontSize: 32)),
+              ),
+              const SizedBox(width: 16), // Espacio entre botones
+              FloatingActionButton(
+                backgroundColor: _mood == 1
+                    ? Colors.amber
+                    : Color.fromARGB(255, 212, 222, 219),
+                heroTag: "neutral",
+                onPressed: () async {
+                  setState(() {
+                    _mood = 1;
+                  });
+                },
+                child: const Text("😕", style: TextStyle(fontSize: 32)),
+              ),
+              const SizedBox(width: 16),
+              FloatingActionButton(
+                backgroundColor: _mood == 2
+                    ? Colors.red
+                    : Color.fromARGB(255, 212, 222, 219),
+                heroTag: "triste",
+                onPressed: () async {
+                  setState(() {
+                    _mood = 2;
+                  });
+                },
+                child: const Text("😢", style: TextStyle(fontSize: 32)),
               ),
             ],
           ),

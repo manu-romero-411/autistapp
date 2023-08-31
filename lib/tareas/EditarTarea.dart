@@ -1,16 +1,11 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 import 'package:autistapp/tareas/tarea.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
-import 'package:diacritic/diacritic.dart';
 
 class EditorTareas extends StatefulWidget {
-  final TareaN? tarea;
+  final Tarea? tarea;
 
   const EditorTareas({this.tarea});
   @override
@@ -34,7 +29,6 @@ class _EditorTareasState extends State<EditorTareas> {
   late bool _repite;
   late int _unidad;
   late bool _completada;
-  bool _hasFechaLimite = false;
 
   @override
   void initState() {
@@ -47,7 +41,6 @@ class _EditorTareasState extends State<EditorTareas> {
       _nombreController.text = widget.tarea?.nombre;
       _fechaInicio = widget.tarea?.fechaInicio;
       _fechaFin = widget.tarea?.fechaFin;
-      _fechaLimite = widget.tarea?.fechaLimite;
       _tipo = widget.tarea?.tipo;
       _prioridad = widget.tarea?.prioridad;
       _repite = widget.tarea?.repite;
@@ -108,7 +101,6 @@ class _EditorTareasState extends State<EditorTareas> {
                   _id,
                   _nombreController.text,
                   _fechaFin!,
-                  _fechaLimite!,
                   _tipo,
                   _prioridad,
                   _repite,
@@ -144,62 +136,28 @@ class _EditorTareasState extends State<EditorTareas> {
             children: [
               ElevatedButton(
                 onPressed: () => setState(() => _prioridad = 0),
-                child: const Text('Baja'),
                 style: ElevatedButton.styleFrom(
-                  primary: _prioridad == 0 ? Colors.green : Colors.grey,
+                  backgroundColor: _prioridad == 0 ? Colors.green : Colors.grey,
                 ),
+                child: const Text('Baja'),
               ),
               ElevatedButton(
                 onPressed: () => setState(() => _prioridad = 1),
-                child: const Text('Media'),
                 style: ElevatedButton.styleFrom(
-                  primary: _prioridad == 1 ? Colors.orange : Colors.grey,
+                  backgroundColor:
+                      _prioridad == 1 ? Colors.orange : Colors.grey,
                 ),
+                child: const Text('Media'),
               ),
               ElevatedButton(
                 onPressed: () => setState(() => _prioridad = 2),
                 child: const Text('Alta'),
                 style: ElevatedButton.styleFrom(
-                  primary: _prioridad == 2 ? Colors.red : Colors.grey,
+                  backgroundColor: _prioridad == 2 ? Colors.red : Colors.grey,
                 ),
               ),
             ],
           ),
-          SwitchListTile(
-            title: const Text('Establecer fecha límite'),
-            value: _hasFechaLimite,
-            onChanged: (value) => setState(() => _hasFechaLimite = value),
-          ),
-          if (_hasFechaLimite)
-            ListTile(
-              title: Text(
-                  'Fecha límite: ${DateFormat('yyyy-MM-dd HH:mm').format(_fechaLimite!)}'),
-              onTap: () async {
-                final fechaSeleccionada = await showDatePicker(
-                  context: context,
-                  initialDate: _fechaLimite!,
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime.now().add(const Duration(days: 365 * 100)),
-                );
-                if (fechaSeleccionada != null) {
-                  final horaSeleccionada = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay.fromDateTime(_fechaLimite!),
-                  );
-                  if (horaSeleccionada != null) {
-                    setState(() {
-                      _fechaLimite = DateTime(
-                        fechaSeleccionada.year,
-                        fechaSeleccionada.month,
-                        fechaSeleccionada.day,
-                        horaSeleccionada.hour,
-                        horaSeleccionada.minute,
-                      );
-                    });
-                  }
-                }
-              },
-            ),
           SwitchListTile(
             title: const Text('Repetir periódicamente'),
             value: _repite,

@@ -1,105 +1,269 @@
-/*import 'package:autistapp/tarea.dart';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz;
 
-final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+class SendNot extends StatefulWidget {
+  const SendNot({Key? key}) : super(key: key);
 
-Future<void> programarNotificaciones(ListaTareas listaTareas) async {
-  // Inicializar el plugin de notificaciones
-  const initializationSettingsAndroid =
-      AndroidInitializationSettings('app_icon');
-  final initializationSettings = const InitializationSettings(
-    android: initializationSettingsAndroid,
-  );
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  @override
+  State<SendNot> createState() => _SendNotState();
+}
 
-  // Cancelar todas las notificaciones existentes
-  await flutterLocalNotificationsPlugin.cancelAll();
+class _SendNotState extends State<SendNot> {
+  final TextEditingController _title = TextEditingController();
+  final TextEditingController _desc = TextEditingController();
+  final TextEditingController _date = TextEditingController();
+  final TextEditingController _time = TextEditingController();
 
-  // Programar notificaciones para cada tarea
-  for (final tarea in listaTareas.tareas) {
-    if (!tarea.completada) {
-      final id = tarea.id.hashCode;
-      final titulo = 'Recordatorio de tarea';
-      final cuerpo = tarea.nombre;
+  DateTime dateTime = DateTime.now();
+  tz.TZDateTime scheduledDate = tz.TZDateTime.from(DateTime.now(), tz.local);
 
-      if (tarea.fechaLimite != null && tarea.fechaLimite != DateTime(9999)) {
-        // Programar notificaciones antes de la fecha límite
-        final fechaLimite = tarea.fechaLimite;
-        final tzFechaLimite = tz.TZDateTime.from(fechaLimite!, tz.local);
-        if (tarea.prioridad == 2) {
-          await flutterLocalNotificationsPlugin.zonedSchedule(
-            id,
-            titulo,
-            cuerpo,
-            tzFechaLimite.subtract(const Duration(hours: 6)),
-            const NotificationDetails(
-              android: AndroidNotificationDetails(
-                'Tarea',
-                'Recordatorios de tareas',
-              ),
-            ),
-            androidAllowWhileIdle: true,
-            uiLocalNotificationDateInterpretation:
-                UILocalNotificationDateInterpretation.absoluteTime,
-          );
-          await flutterLocalNotificationsPlugin.zonedSchedule(
-            id + 1,
-            titulo,
-            cuerpo,
-            tzFechaLimite.subtract(const Duration(hours: 3)),
-            const NotificationDetails(
-              android: AndroidNotificationDetails(
-                'Tarea',
-                'Recordatorios de tareas',
-              ),
-            ),
-            androidAllowWhileIdle: true,
-            uiLocalNotificationDateInterpretation:
-                UILocalNotificationDateInterpretation.absoluteTime,
-          );
-        }
-        if (tarea.prioridad >= 1) {
-          await flutterLocalNotificationsPlugin.zonedSchedule(
-            id + 2,
-            titulo,
-            cuerpo,
-            tzFechaLimite.subtract(const Duration(hours: 1)),
-            const NotificationDetails(
-              android: AndroidNotificationDetails(
-                'Tarea',
-                'Recordatorios de tareas',
-              ),
-            ),
-            androidAllowWhileIdle: true,
-            uiLocalNotificationDateInterpretation:
-                UILocalNotificationDateInterpretation.absoluteTime,
-          );
-        }
-      } else {
-        // Programar notificaciones periódicas
-        final intervalo = Duration(
-            hours: tarea.prioridad == 2
-                ? 1
-                : tarea.prioridad == 1
-                    ? 3
-                    : 24);
-        await flutterLocalNotificationsPlugin.periodicallyShow(
-          id,
-          titulo,
-          cuerpo,
-          RepeatInterval.everyMinute,
-          const NotificationDetails(
-            android: AndroidNotificationDetails(
-              'Tarea',
-              'Recordatorios de tareas',
-            ),
-          ),
-          androidAllowWhileIdle: true,
-        );
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  @override
+  void initState() {
+    super.initState();
+    tz.initializeTimeZones();
+    const AndroidInitializationSettings androidInitializationSettings =
+        AndroidInitializationSettings("ic_launcher");
+
+    const DarwinInitializationSettings iosInitializationSettings =
+        DarwinInitializationSettings();
+
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
+      android: androidInitializationSettings,
+      iOS: iosInitializationSettings,
+      macOS: null,
+      linux: null,
+    );
+
+    flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (details) {
+        flutterLocalNotificationsPlugin
+            .getNotificationAppLaunchDetails()
+            .then((value) {
+          // Aquí puedes manejar el evento de clic en la notificación
+        });
+      },
+    );
+  }
+
+  tz.TZDateTime _convertTime(int minute) {
+    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+    tz.TZDateTime scheduleDate =
+        tz.TZDateTime(tz.local, now.year, now.month, now.day, now.hour, minute);
+
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+    return scheduleDate;
+  }
+
+  showNotification() {
+    if (_title.text.isEmpty || _desc.text.isEmpty) {
+      return;
+    }
+
+    const AndroidNotificationDetails androidNotificationDetails =
+        AndroidNotificationDetails(
+      "ScheduleNotification001",
+      "Notify Me",
+      importance: Importance.high,
+    );
+
+    const DarwinNotificationDetails iosNotificationDetails =
+        DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const NotificationDetails notificationDetails = NotificationDetails(
+      android: androidNotificationDetails,
+      iOS: iosNotificationDetails,
+      macOS: null,
+      linux: null,
+    );
+
+    // flutterLocalNotificationsPlugin.show(
+    //     01, _title.text, _desc.text, notificationDetails);
+
+    scheduledDate = tz.TZDateTime.from(dateTime, tz.local);
+
+    try {
+      flutterLocalNotificationsPlugin.zonedSchedule(
+          01, _title.text, _desc.text, _convertTime(55), notificationDetails,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.wallClockTime,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          payload: 'Ths s the data');
+    } catch (e) {
+      print("Error at zonedScheduleNotification----------------------------$e");
+      if (e ==
+          "Invalid argument (scheduledDate): Must be a date in the future: Instance of 'TZDateTime'") {
+        Fluttertoast.showToast(msg: "Select future date");
       }
     }
   }
+
+  Future zonedScheduleNotification(String note, DateTime date, occ) async {
+    // IMPORTANT!!
+    //tz.initializeTimeZones(); --> call this before using tz.local (ideally put it in your init state)
+
+    tz.initializeTimeZones();
+
+    int id = Random().nextInt(10000);
+    print(date.toString());
+    print(tz.TZDateTime.parse(tz.local, date.toString()).toString());
+    try {
+      await flutterLocalNotificationsPlugin.zonedSchedule(
+        id,
+        occ,
+        note,
+        tz.TZDateTime.parse(tz.local, date.toString()),
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+              'your channel id', 'your channel name',
+              channelDescription: 'your channel description',
+              largeIcon: DrawableResourceAndroidBitmap("logo"),
+              icon: "ic_launcher",
+              playSound: true,
+              sound: RawResourceAndroidNotificationSound('bell_sound')),
+        ),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+      return id;
+    } catch (e) {
+      print("Error at zonedScheduleNotification----------------------------$e");
+      if (e ==
+          "Invalid argument (scheduledDate): Must be a date in the future: Instance of 'TZDateTime'") {
+        Fluttertoast.showToast(msg: "Select future date");
+      }
+      return -1;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.8,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _title,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16.0),
+                  ),
+                  label: const Text("Notification Title"),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _desc,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16.0),
+                  ),
+                  label: const Text("Notification Description"),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _date,
+                decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    suffixIcon: InkWell(
+                      child: const Icon(Icons.date_range),
+                      onTap: () async {
+                        final DateTime? newlySelectedDate =
+                            await showDatePicker(
+                          context: context,
+                          initialDate: dateTime,
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime(2095),
+                        );
+
+                        if (newlySelectedDate == null) {
+                          return;
+                        }
+
+                        setState(() {
+                          dateTime = newlySelectedDate;
+                          // _date.text =
+                          //     "${dateTime.year}/${dateTime.month}/${dateTime.day}";
+                        });
+                      },
+                    ),
+                    label: const Text("Date")),
+              ),
+              const SizedBox(
+                height: 16.0,
+              ),
+              TextField(
+                controller: _time,
+                decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    suffixIcon: InkWell(
+                      child: const Icon(
+                        Icons.timer_outlined,
+                      ),
+                      onTap: () async {
+                        final TimeOfDay? slectedTime = await showTimePicker(
+                            context: context, initialTime: TimeOfDay.now());
+
+                        if (slectedTime == null) {
+                          return;
+                        }
+
+                        _time.text =
+                            "${slectedTime.hour}:${slectedTime.minute}:${slectedTime.period.toString()}";
+
+                        DateTime newDT = DateTime(
+                          dateTime.year,
+                          dateTime.month,
+                          dateTime.day,
+                          slectedTime.hour,
+                          slectedTime.minute,
+                        );
+                        setState(() {
+                          dateTime = newDT;
+                        });
+                      },
+                    ),
+                    label: const Text("Time")),
+              ),
+              const SizedBox(
+                height: 24.0,
+              ),
+              ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 55),
+                  ),
+                  onPressed: () async {
+                    showNotification();
+                  },
+                  child: const Text("Show Notification")),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
-*/

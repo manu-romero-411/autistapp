@@ -1,4 +1,4 @@
-package es.ujaen.autistapp.autistapp
+package es.ujaen.autistapp
 
 import io.flutter.embedding.android.FlutterActivity
 

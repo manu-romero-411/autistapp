@@ -31,15 +31,18 @@ class NotaTexto {
 }
 
 class ListaNotasTexto {
-  List<NotaTexto> notas = [];
+  List<NotaTexto> _notas = [];
 
+  get notas => _notas;
+
+  set notas(value) => _notas = value;
   Future<File> get _localFile async {
     final directory = await getApplicationDocumentsDirectory();
     return File('${directory.path}/autistapp_text_notes.json');
   }
 
   List<NotaTexto> toList() {
-    return notas;
+    return _notas;
   }
 
   Future<void> cargarDatos() async {
@@ -48,7 +51,7 @@ class ListaNotasTexto {
       if (await file.exists()) {
         final contents = await file.readAsString();
         final data = jsonDecode(contents);
-        notas = List<NotaTexto>.from(data['textNotes'].map((x) => NotaTexto(
+        _notas = List<NotaTexto>.from(data['textNotes'].map((x) => NotaTexto(
             id: x['id'],
             titulo: x['titulo'],
             fecha: DateTime.parse(x['fecha']),
@@ -61,10 +64,38 @@ class ListaNotasTexto {
     }
   }
 
+  Future<void> cargarDatosPorFecha(String fecha) async {
+    List<NotaTexto> notasFec = [];
+
+    try {
+      final file = await _localFile;
+      if (await file.exists()) {
+        final contents = await file.readAsString();
+        final data = jsonDecode(contents);
+        notasFec = List<NotaTexto>.from(data['textNotes']
+            .where((x) => (DateFormat("yyyy-MM-dd")
+                .format(DateTime.parse(x['fecha']))
+                .contains(fecha)))
+            .map((x) => NotaTexto(
+                id: x['id'],
+                titulo: x['titulo'],
+                fecha: DateTime.parse(x['fecha']),
+                texto: x['texto'],
+                mood: x['mood'],
+                ambito: x['ambito'])));
+
+        _notas = notasFec;
+      }
+    } catch (e) {
+      print('Error al cargar datos: $e');
+    }
+    //return notasFec;
+  }
+
   Future<File> guardarDatos() async {
     final file = await _localFile;
     return file.writeAsString(jsonEncode({
-      'textNotes': List<dynamic>.from(notas.map((x) => {
+      'textNotes': List<dynamic>.from(_notas.map((x) => {
             'id': x.id,
             'titulo': x.titulo,
             'fecha': x.fecha.toIso8601String(),
@@ -78,15 +109,17 @@ class ListaNotasTexto {
   void agregarNota(
       String uuid, String titulo, String texto, int mood, int ambito) {
     try {
-      NotaTexto notaExistente = notas.firstWhere((nota) => nota.id == uuid);
-      notaExistente.titulo = titulo;
+      NotaTexto notaExistente = _notas.firstWhere((nota) => nota.id == uuid);
+      titulo == ""
+          ? notaExistente.titulo == "Nota sin título"
+          : notaExistente.titulo = titulo;
       notaExistente.texto = texto;
       notaExistente.mood = mood;
       notaExistente.ambito = ambito;
     } catch (e) {
-      notas.add(NotaTexto(
+      _notas.add(NotaTexto(
         id: uuid,
-        titulo: titulo,
+        titulo: titulo == "" ? "Nota sin título" : titulo,
         fecha: DateTime.now(),
         texto: texto,
         mood: mood,
@@ -97,7 +130,7 @@ class ListaNotasTexto {
   }
 
   void eliminarNota(String id) {
-    notas.removeWhere((notaBuscada) => notaBuscada.id == id);
+    _notas.removeWhere((notaBuscada) => notaBuscada.id == id);
     guardarDatos();
   }
 }
@@ -301,7 +334,8 @@ class _EditorNotasState extends State<EditorNotas> {
             IconButton(
               icon: const Icon(Icons.share),
               onPressed: () async {
-                await Share.share(_textController.text);
+                await Share.share(
+                    "AutisApp - Nota de texto\nFecha: ${DateFormat("yyyy-MM-dd EEEE", "es_ES").format(widget.nota!.fecha)}\nMood: ${_mood == 0 ? '🟢' : _mood == 1 ? '🟠' : '🔴'}\n\n${widget.nota!.titulo.toUpperCase()}\n======\n\n${_textController.text}");
               },
             ),
           IconButton(
@@ -314,81 +348,94 @@ class _EditorNotasState extends State<EditorNotas> {
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            TextField(
-              controller: _descController,
-              maxLength: 100,
-              decoration: const InputDecoration(
-                labelText: 'Título',
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              TextField(
+                controller: _descController,
+                maxLength: 100,
+                decoration: const InputDecoration(
+                  labelText: 'Título',
+                ),
               ),
-            ),
-            TextField(
-              controller: _textController,
-              maxLength: 4000,
-              decoration: const InputDecoration(
-                labelText: 'Texto',
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  FloatingActionButton(
+                    backgroundColor: _mood == 0
+                        ? Colors.green
+                        : Color.fromARGB(255, 212, 222, 219),
+                    heroTag: "feliz",
+                    onPressed: () async {
+                      setState(() {
+                        _mood = 0;
+                      });
+                    },
+                    child: const Text("😄", style: TextStyle(fontSize: 32)),
+                  ),
+                  const SizedBox(width: 16), // Espacio entre botones
+                  FloatingActionButton(
+                    backgroundColor: _mood == 1
+                        ? Colors.amber
+                        : Color.fromARGB(255, 212, 222, 219),
+                    heroTag: "neutral",
+                    onPressed: () async {
+                      setState(() {
+                        _mood = 1;
+                      });
+                    },
+                    child: const Text("😕", style: TextStyle(fontSize: 32)),
+                  ),
+                  const SizedBox(width: 16),
+                  FloatingActionButton(
+                    backgroundColor: _mood == 2
+                        ? Colors.red
+                        : Color.fromARGB(255, 212, 222, 219),
+                    heroTag: "triste",
+                    onPressed: () async {
+                      setState(() {
+                        _mood = 2;
+                      });
+                    },
+                    child: const Text("😢", style: TextStyle(fontSize: 32)),
+                  ),
+                ],
               ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.sentiment_very_satisfied),
-                  color: _mood == 2 ? Colors.green : null,
-                  onPressed: () {
+              DropdownButton<int>(
+                value: _ambito,
+                items: const [
+                  DropdownMenuItem(
+                    value: 0,
+                    child: Text('⚙️ Académico/Laboral'),
+                  ),
+                  DropdownMenuItem(
+                    value: 1,
+                    child: Text('🗣 Social'),
+                  ),
+                  DropdownMenuItem(
+                    value: 2,
+                    child: Text('😇 Personal'),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (widget.nota != null && value != null) {
                     setState(() {
-                      _mood = 2;
+                      _ambito = value;
                     });
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.sentiment_neutral),
-                  color: _mood == 1 ? Colors.yellow : null,
-                  onPressed: () {
-                    setState(() {
-                      _mood = 1;
-                    });
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.sentiment_very_dissatisfied),
-                  color: _mood == 0 ? Colors.red : null,
-                  onPressed: () {
-                    setState(() {
-                      _mood = 0;
-                    });
-                  },
-                ),
-              ],
-            ),
-            DropdownButton<int>(
-              value: _ambito,
-              items: const [
-                DropdownMenuItem(
-                  value: 0,
-                  child: Text('⚙️ Académico/Laboral'),
-                ),
-                DropdownMenuItem(
-                  value: 1,
-                  child: Text('🗣 Social'),
-                ),
-                DropdownMenuItem(
-                  value: 2,
-                  child: Text('😇 Personal'),
-                ),
-              ],
-              onChanged: (value) {
-                if (widget.nota != null && value != null) {
-                  setState(() {
-                    _ambito = value;
-                  });
-                }
-              },
-            ),
-          ],
+                  }
+                },
+              ),
+              TextField(
+                controller: _textController,
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+                decoration: const InputDecoration(labelText: 'Texto'),
+              )
+            ],
+          ),
         ),
       ),
     );

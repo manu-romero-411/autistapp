@@ -1,5 +1,6 @@
 import 'package:autistapp/apuntes/audio/apuntesAudio.dart';
 import 'package:autistapp/apuntes/texto/apuntesTexto.dart';
+import 'package:autistapp/tareas/vida_diaria/VistaDias.dart';
 import 'package:flutter/material.dart';
 
 class MenuLateral extends StatefulWidget {
@@ -15,25 +16,43 @@ class MenuLateral extends StatefulWidget {
 
 class _MenuLateralState extends State<MenuLateral> {
   bool notificationsEnabled = false;
+  bool isDark = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.theme == "light" ? isDark = false : isDark = true;
+  }
 
   @override
   Widget build(BuildContext context) {
     final children = <Widget>[
       const DrawerHeader(child: Text('Menú')),
-      SwitchListTile(
-        title: const Text('Habilitar notificaciones'),
-        value: notificationsEnabled,
-        onChanged: (value) {
+      ListTile(
+        dense: true,
+        onTap: () {
           setState(() {
-            notificationsEnabled = value;
+            notificationsEnabled = !notificationsEnabled;
           });
         },
+        leading: const Icon(Icons.notifications),
+        title: const Text('Habilitar notificaciones'),
+        trailing: Switch(
+          value: notificationsEnabled,
+          onChanged: (value) {
+            setState(() {
+              notificationsEnabled = value;
+            });
+          },
+        ),
       ),
     ];
 
     if (notificationsEnabled) {
       children.add(
         ListTile(
+          dense: true,
+          leading: const Icon(Icons.settings),
           title: const Text('Ajustes de notificaciones'),
           onTap: () {
             Navigator.push(
@@ -48,6 +67,19 @@ class _MenuLateralState extends State<MenuLateral> {
 
     children.addAll([
       ListTile(
+        leading: const Icon(Icons.calendar_today),
+        dense: true,
+        title: const Text('Vista de calendario'),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => VistaCalendario()),
+          );
+        },
+      ),
+      ListTile(
+        leading: const Icon(Icons.mic),
+        dense: true,
         title: const Text('Notas de voz'),
         onTap: () {
           Navigator.push(
@@ -57,6 +89,8 @@ class _MenuLateralState extends State<MenuLateral> {
         },
       ),
       ListTile(
+        leading: const Icon(Icons.edit),
+        dense: true,
         title: const Text('Notas de texto'),
         onTap: () {
           Navigator.push(
@@ -66,51 +100,39 @@ class _MenuLateralState extends State<MenuLateral> {
         },
       ),
       ListTile(
-        title: const Text('Elegir tema'),
+        dense: true,
         onTap: () {
-          showDialog(
-            context: context,
-            builder: (context) {
-              return SimpleDialog(
-                title: const Text('Selecciona un tema'),
-                children: [
-                  SimpleDialogOption(
-                    padding: const EdgeInsets.all(16.0),
-                    onPressed: () {
-                      widget.onThemeChanged('light');
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Claro'),
-                  ),
-                  SimpleDialogOption(
-                    padding: const EdgeInsets.all(16.0),
-                    onPressed: () {
-                      widget.onThemeChanged('dark');
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Oscuro'),
-                  ),
-                  SimpleDialogOption(
-                    padding: const EdgeInsets.all(16.0),
-                    onPressed: () {
-                      widget.onThemeChanged('system');
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Usar ajustes del sistema'),
-                  ),
-                ],
-              );
-            },
-          );
+          setState(() {
+            isDark = !isDark;
+            String change = (isDark ? "dark" : 'light');
+            widget.onThemeChanged(change);
+          });
         },
+        leading: const Icon(Icons.dark_mode_outlined),
+        title: const Text('Tema oscuro'),
+        trailing: Switch(
+          value: isDark,
+          onChanged: (value) {
+            setState(() {
+              String change = "";
+              isDark = value;
+              value ? change = 'dark' : change = 'light';
+              widget.onThemeChanged(change);
+            });
+          },
+        ),
       ),
       ListTile(
+        dense: true,
+        leading: const Icon(Icons.help),
         title: const Text('Cómo usar la app'),
         onTap: () {
           // Mostrar información sobre cómo usar la app
         },
       ),
       ListTile(
+        dense: true,
+        leading: const Icon(Icons.info),
         title: const Text('Acerca de'),
         onTap: () {
           // Mostrar información sobre la app

@@ -1,19 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:uuid/uuid.dart';
-import 'package:diacritic/diacritic.dart';
 
-class TareaN {
+class Tarea {
   String _id;
   String _nombre;
   DateTime _fechaInicio;
   DateTime? _fechaFin = DateTime(DateTime.now().year + 99);
-  DateTime? _fechaLimite = DateTime(DateTime.now().year + 99);
   int _tipo;
   int _prioridad;
   bool _repite;
@@ -36,10 +30,6 @@ class TareaN {
   get fechaFin => _fechaFin;
 
   set fechaFin(value) => _fechaFin = value;
-
-  get fechaLimite => _fechaLimite;
-
-  set fechaLimite(value) => _fechaLimite = value;
 
   get tipo => _tipo;
 
@@ -65,12 +55,11 @@ class TareaN {
 
   set completada(value) => _completada = value;
 
-  TareaN({
+  Tarea({
     required String id,
     required String nombre,
     required DateTime fechaInicio,
     required DateTime? fechaFin,
-    required DateTime? fechaLimite,
     required int tipo,
     required int prioridad,
     required bool repite,
@@ -83,7 +72,6 @@ class TareaN {
         _repite = repite,
         _prioridad = prioridad,
         _tipo = tipo,
-        _fechaLimite = fechaLimite,
         _fechaFin = fechaFin,
         _fechaInicio = fechaInicio,
         _nombre = nombre,
@@ -92,17 +80,25 @@ class TareaN {
       _nombre = _nombre.substring(0, 100);
     }
   }
+
+  toFirebase() {
+    return {
+      "tarea": nombre,
+      "fechaInicio": fechaInicio.toString(),
+      "repite": repite,
+    };
+  }
 }
 
 class ListaTareas {
-  List<TareaN> _tareas = [];
+  List<Tarea> _tareas = [];
 
   Future<File> get _localFile async {
     final directory = await getApplicationDocumentsDirectory();
     return File('${directory.path}/autistapp_tasks.json');
   }
 
-  List<TareaN> toList() {
+  List<Tarea> toList() {
     return _tareas;
   }
 
@@ -110,6 +106,10 @@ class ListaTareas {
     return (_tareas.where((tarea) => tarea.completada).length /
             _tareas.length) *
         100;
+  }
+
+  int getSize() {
+    return _tareas.length;
   }
 
   int getCompletados() {
@@ -121,12 +121,11 @@ class ListaTareas {
       final file = await _localFile;
       final contents = await file.readAsString();
       final data = jsonDecode(contents);
-      _tareas = List<TareaN>.from(data['tasks'].map((x) => TareaN(
+      _tareas = List<Tarea>.from(data['tasks'].map((x) => Tarea(
           id: x['id'],
           nombre: x['nombre'],
           fechaInicio: DateTime.parse(x['fechaInicio']),
           fechaFin: DateTime.parse(x['fechaFin']),
-          fechaLimite: DateTime.parse(x['fechaLimite']),
           tipo: x['tipo'],
           prioridad: x['prioridad'],
           repite: x['repite'] == true ? true : false,
@@ -147,7 +146,6 @@ class ListaTareas {
             'nombre': x.nombre,
             'fechaInicio': x.fechaInicio.toIso8601String(),
             'fechaFin': x.fechaFin?.toIso8601String(),
-            'fechaLimite': x.fechaLimite?.toIso8601String(),
             'tipo': x.tipo,
             'prioridad': x.prioridad,
             'repite': x.repite,
@@ -158,22 +156,12 @@ class ListaTareas {
     }));
   }
 
-  void agregarTarea(
-      String uuid,
-      String nombre,
-      DateTime fechaFin,
-      DateTime fechaLimite,
-      int tipo,
-      int prioridad,
-      bool repite,
-      int intervalo,
-      int unidad,
-      bool completada) {
+  void agregarTarea(String uuid, String nombre, DateTime fechaFin, int tipo,
+      int prioridad, bool repite, int intervalo, int unidad, bool completada) {
     try {
-      TareaN tareaExistente = _tareas.firstWhere((tarea) => tarea.id == uuid);
+      Tarea tareaExistente = _tareas.firstWhere((tarea) => tarea.id == uuid);
       tareaExistente.nombre = nombre;
       tareaExistente.fechaFin = fechaFin;
-      tareaExistente.fechaLimite = fechaLimite;
       tareaExistente.tipo = tipo;
       tareaExistente.prioridad = prioridad;
       tareaExistente.repite = repite;
@@ -181,12 +169,11 @@ class ListaTareas {
       tareaExistente.unidad = unidad;
       tareaExistente.completada = completada;
     } catch (e) {
-      _tareas.add(TareaN(
+      _tareas.add(Tarea(
         id: uuid,
         nombre: nombre,
         fechaInicio: DateTime.now(),
         fechaFin: fechaFin,
-        fechaLimite: fechaLimite,
         tipo: tipo,
         prioridad: prioridad,
         repite: repite,

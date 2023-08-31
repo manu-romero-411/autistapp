@@ -1,9 +1,15 @@
 import 'dart:io';
+import 'package:autistapp/apuntes/audio/apuntesAudio.dart';
+import 'package:autistapp/apuntes/texto/apuntesTexto.dart';
+import 'package:autistapp/autoayuda/VistaAyuda.dart';
 import 'package:autistapp/menuLateral.dart';
+import 'package:autistapp/notify.dart';
 import 'package:autistapp/tareas/EditarTarea.dart';
 import 'package:autistapp/tareas/tarea.dart';
+import 'package:autistapp/tareas/vida_diaria/Dia.dart';
 import 'package:autistapp/tareas/vida_diaria/rutina.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:intl/intl.dart';
 import 'package:diacritic/diacritic.dart';
@@ -24,19 +30,23 @@ class VistaTareas extends StatefulWidget {
 class _VistaTareasState extends State<VistaTareas> {
   final listaTareas = ListaTareas();
   final listaRutinas = ListaRutinas();
+  Dia dia = Dia(
+      id: DateFormat("yyyyMMdd").format(DateTime.now()),
+      nombre: '',
+      mood: -1,
+      texto: '');
 
-  List<TareaN> busqueda = [];
+  List<Tarea> busqueda = [];
 
   @override
   void initState() {
     super.initState();
+    dia.cargarDatos();
+
     listaTareas.cargarDatos().then((_) {
       setState(() {
         busqueda = listaTareas.toList();
-      });
-    });
-    regenerarRutinas().then((_) {
-      setState(() {
+        regenerarRutinas();
         listaRutinas.cargarDatos();
       });
     });
@@ -55,14 +65,12 @@ class _VistaTareasState extends State<VistaTareas> {
     });
   }
 
-  bool _operadorBusqueda(TareaN tarea, String valor) {
+  bool _operadorBusqueda(Tarea tarea, String valor) {
     if (valor == "") return true;
     if (removeDiacritics(tarea.nombre.toLowerCase()).contains(valor))
       return true;
     //if (nota.texto.toLowerCase().contains(valor)) return true;
     if ((DateFormat('yyyy-MM-dd').format(tarea.fechaInicio).contains(valor)))
-      return true;
-    if ((DateFormat('yyyy-MM-dd').format(tarea.fechaLimite!).contains(valor)))
       return true;
 
     if (valor.toLowerCase().contains("acad") ||
@@ -138,12 +146,45 @@ class _VistaTareasState extends State<VistaTareas> {
     }
   }
 
+  TextEditingController _textFieldController = TextEditingController();
+
+  Future<String?> _displayTextInputDialog(
+      BuildContext context, String titulo) async {
+    return showDialog<String>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(titulo),
+            content: TextField(
+              controller: _textFieldController,
+              decoration: InputDecoration(hintText: "Text Field in Dialog"),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text('CANCEL'),
+                onPressed: () {
+                  Navigator.pop(context, "");
+                },
+              ),
+              TextButton(
+                child: Text('OK'),
+                onPressed: () {
+                  Navigator.pop(context, _textFieldController.text);
+                },
+              ),
+            ],
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: const Color.fromARGB(255, 10, 172, 155),
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          centerTitle: true,
+          title: const Text("autistApp"),
+          backgroundColor: Color.fromARGB(43, 0, 0, 0),
           elevation: 0,
           leading: Builder(
             builder: (context) => IconButton(
@@ -156,6 +197,9 @@ class _VistaTareasState extends State<VistaTareas> {
             theme: widget.theme, onThemeChanged: widget.onThemeChanged),
         body: SingleChildScrollView(
           child: Column(children: [
+            const SizedBox(
+              height: 28,
+            ),
             const Text(
               "¡Bienvenido, fulano!",
               style: TextStyle(
@@ -175,31 +219,84 @@ class _VistaTareasState extends State<VistaTareas> {
                   color: Colors.white),
               textAlign: TextAlign.center,
             ),
+            const SizedBox(
+              height: 16,
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 FloatingActionButton(
+                  backgroundColor: dia.mood == 0
+                      ? Colors.green
+                      : Color.fromARGB(255, 212, 222, 219),
                   heroTag: "feliz",
-                  onPressed: () {
-                    // Lógica cuando se presiona el botón
+                  onPressed: () async {
+                    String? result =
+                        await _displayTextInputDialog(context, 'Mi título');
+
+                    setState(() {
+                      dia.texto = result;
+                      dia.mood = 0;
+                      dia.guardarDatos();
+                    });
                   },
                   child: const Text("😄", style: TextStyle(fontSize: 32)),
                 ),
                 const SizedBox(width: 16), // Espacio entre botones
                 FloatingActionButton(
+                  backgroundColor: dia.mood == 1
+                      ? Colors.amber
+                      : Color.fromARGB(255, 212, 222, 219),
                   heroTag: "neutral",
-                  onPressed: () {
-                    // Lógica cuando se presiona el botón
+                  onPressed: () async {
+                    String? result =
+                        await _displayTextInputDialog(context, 'Mi título');
+                    setState(() {
+                      dia.texto = result;
+
+                      dia.mood = 1;
+                      dia.guardarDatos();
+                    });
                   },
                   child: const Text("😕", style: TextStyle(fontSize: 32)),
                 ),
-                const SizedBox(width: 16), // Espacio entre botones
+                const SizedBox(width: 16),
                 FloatingActionButton(
+                  backgroundColor: dia.mood == 2
+                      ? Colors.red
+                      : Color.fromARGB(255, 212, 222, 219),
                   heroTag: "triste",
-                  onPressed: () {
-                    // Lógica cuando se presiona el botón
+                  onPressed: () async {
+                    String? result =
+                        await _displayTextInputDialog(context, 'Mi título');
+                    print(result);
+                    setState(() {
+                      dia.texto = result;
+
+                      dia.mood = 2;
+                      dia.guardarDatos();
+                    });
                   },
-                  child: const Text("😔", style: TextStyle(fontSize: 32)),
+                  child: const Text("😢", style: TextStyle(fontSize: 32)),
+                ),
+
+                const SizedBox(width: 16),
+                FloatingActionButton(
+                  backgroundColor: dia.mood == 3
+                      ? Colors.purple
+                      : Color.fromARGB(255, 212, 222, 219),
+                  heroTag: "cansado",
+                  onPressed: () async {
+                    String? result =
+                        await _displayTextInputDialog(context, 'Mi título');
+                    setState(() {
+                      dia.texto = result;
+
+                      dia.mood = 3;
+                      dia.guardarDatos();
+                    });
+                  },
+                  child: const Text("😩", style: TextStyle(fontSize: 32)),
                 ),
               ],
             ),
@@ -219,10 +316,12 @@ class _VistaTareasState extends State<VistaTareas> {
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   TextSpan(
-                    text: listaTareas.getCompletados() != listaRutinas.getSize()
-                        ? '🗓 Tareas que hoy tocaban: ${listaTareas.getPercentage().toStringAsPrecision(3)} % completadas\n'
-                        : '🗓 ¡Ya has acabado las tareas para hoy!\n',
-                  ),
+                      text: listaTareas.getCompletados() !=
+                              listaTareas.getSize()
+                          ? '🗓 Tareas que hoy tocaban: ${listaTareas.getPercentage().toStringAsPrecision(3)} % completadas\n'
+                          : listaTareas.getSize() == 0
+                              ? '🗓 Parece que no tienes tareas pendientes\n'
+                              : '🗓 ¡Ya has acabado las tareas para hoy!\n'),
                   const TextSpan(text: '🔙 ¿Pendientes de otros días? Sí\n'),
                 ],
               ),
@@ -392,7 +491,7 @@ class _VistaTareasState extends State<VistaTareas> {
                 Navigator.of(context)
                     .push(
                   MaterialPageRoute(
-                    builder: (context) => const EditorTareas(),
+                    builder: (context) => const GrabadorAudio(),
                   ),
                 )
                     .then((_) {
@@ -411,7 +510,7 @@ class _VistaTareasState extends State<VistaTareas> {
                 Navigator.of(context)
                     .push(
                   MaterialPageRoute(
-                    builder: (context) => EditorTareas(),
+                    builder: (context) => const EditorNotas(),
                   ),
                 )
                     .then((_) {
@@ -424,13 +523,13 @@ class _VistaTareasState extends State<VistaTareas> {
               },
             ),
             SpeedDialChild(
-              child: const Icon(Icons.edit),
+              child: const Icon(Icons.feedback),
               label: '¡Necesito ayuda!',
               onTap: () {
                 Navigator.of(context)
                     .push(
                   MaterialPageRoute(
-                    builder: (context) => const EditorTareas(),
+                    builder: (context) => const VistaAyuda(),
                   ),
                 )
                     .then((_) {
