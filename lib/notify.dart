@@ -156,7 +156,7 @@ class _SendNotState extends State<SendNot> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Container(
+        child: SizedBox(
           width: MediaQuery.of(context).size.width * 0.8,
           child: Column(
             mainAxisSize: MainAxisSize.min,

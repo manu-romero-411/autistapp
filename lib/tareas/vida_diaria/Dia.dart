@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
 class Dia {
@@ -42,7 +43,10 @@ class Dia {
       _mood = data['mood'];
       _texto = data['texto'];
     } catch (e) {
-      print('Error al cargar datos: $e');
+      _id = DateFormat("yyyyMMdd").format(DateTime.now());
+      _mood = -1;
+      _texto = "";
+      guardarDatos();
     }
   }
 
