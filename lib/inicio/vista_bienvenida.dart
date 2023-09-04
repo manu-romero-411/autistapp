@@ -45,6 +45,7 @@ class _PantallaBienvenidaState extends State<PantallaBienvenida> {
     });
     _pages = [
       const WelcomePage(
+        imagePath: "assets/images/infinity_loop_white.png",
         title: "¡Hola!",
         content:
             "autistApp es una aplicación que para ayudar a las personas autistas (TEA) con su día a día, gestión de tiempos y tareas, toma de apuntes para un buen registro de las situaciones personales, auxilio ante adversidades, etc. Su finalidad es complementar las terapias psicológicas con profesionales.",
@@ -55,6 +56,7 @@ class _PantallaBienvenidaState extends State<PantallaBienvenida> {
         onThemeChanged: widget.onThemeChanged,
       ),
       const WelcomePage(
+        imagePath: "assets/images/check.png",
         title: "¡Todo en marcha!",
         content: "aaa",
       ),
@@ -69,8 +71,8 @@ class _PantallaBienvenidaState extends State<PantallaBienvenida> {
 
   @override
   void dispose() {
-    super.dispose();
     _colorTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -124,31 +126,58 @@ class _PantallaBienvenidaState extends State<PantallaBienvenida> {
 }
 
 class WelcomePage extends StatelessWidget {
-  final String title;
-  final String content;
+  final String _title;
+  final String _content;
+  final String _imagePath;
 
   const WelcomePage({
     super.key,
-    required this.title,
-    required this.content,
-  });
+    required String title,
+    required String content,
+    required String imagePath,
+  })  : _content = content,
+        _title = title,
+        _imagePath = imagePath;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return FittedBox(
+                    fit: BoxFit.cover,
+                    child: Image.asset(
+                      _imagePath,
+                      width: 200,
+                      height: 200,
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-          Text(content),
-        ],
+            Center(
+              child: Text(
+                _title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Center(
+                child: Text(_content,
+                    style: const TextStyle(color: Colors.white))),
+          ],
+        ),
       ),
     );
   }
@@ -182,39 +211,28 @@ class _ColorPageState extends State<ColorPage> {
   }
 
   @override
-  void dispose() {
-    widget.ajustes.name = _textController.text;
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const SizedBox(
-            height: 28,
+            height: 100,
           ),
-          const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Nombre',
-                      textAlign: TextAlign.left,
-                      style: TextStyle(
-                        fontSize: 16,
-                      ),
-                    )
-                  ])),
-          const SizedBox(
-            height: 10,
+          const Text(
+            "Tu nombre:",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
           ),
+          const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: TextField(
+              onTapOutside: (event) {
+                widget.ajustes.name = _textController.text;
+              },
               controller: _textController,
               maxLines: null,
               keyboardType: TextInputType.multiline,
@@ -225,6 +243,9 @@ class _ColorPageState extends State<ColorPage> {
                   labelText: 'Texto',
                   hintText: "Introduce tu nombre aquí"),
             ),
+          ),
+          const SizedBox(
+            height: 30,
           ),
           const Text(
             "Selecciona un color:",

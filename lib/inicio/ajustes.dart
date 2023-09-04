@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:autistapp/_aux/pair_ambito_icono%20copy.dart';
+import 'package:autistapp/_aux/pair_ambito_icono.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
@@ -13,25 +15,7 @@ class Ajustes {
   Color? _bgColor = Colors.black;
   String _name = "";
 
-  final List<Color> colors = [
-    Colors.brown,
-    Colors.red,
-    Color.fromARGB(255, 148, 110, 145),
-    Colors.orange,
-    Colors.yellow,
-    Colors.white,
-    Colors.lime,
-    Colors.lightGreen,
-    Colors.green,
-    Color.fromARGB(255, 28, 163, 157),
-    Colors.blue,
-    const Color.fromRGBO(7, 63, 160, 1),
-    Colors.blueGrey,
-    Colors.purple,
-    Colors.deepPurple,
-    const Color.fromRGBO(217, 4, 160, 1),
-    // Agrega aquí los demás colores
-  ];
+  Ajustes();
 
   int _minHoraGantt = 8;
   int _maxHoraGantt = 23;
@@ -95,8 +79,6 @@ class Ajustes {
     guardarDatos();
   }
 
-  Ajustes();
-
   Future<void> cargarDatos() async {
     try {
       final file = await _localFile;
@@ -111,7 +93,7 @@ class Ajustes {
       _maxHoraGantt = data['maxHoraGantt'];
       _welcome = data['welcome'] == true ? true : false;
     } catch (e) {
-      print('Error al cargar datos: $e');
+      defaultData();
     }
   }
 
@@ -131,21 +113,156 @@ class Ajustes {
       final contents = jsonEncode(data);
       await file.writeAsString(contents);
     } catch (e) {
-      print('Error al guardar datos: $e');
-      _theme = "light";
-      _color = Colors.blueGrey;
-      _fgColor = Colors.white;
-      _bgColor = Colors.black;
-      _name = "";
-      _minHoraGantt = 8;
-      _maxHoraGantt = 23;
-      _welcome = true;
-      guardarDatos();
+      defaultData();
     }
+  }
+
+  void defaultData() {
+    _theme = "dark";
+    _color = Colors.blueGrey;
+    _fgColor = Colors.white;
+    _bgColor = Colors.black;
+    _name = "";
+    _minHoraGantt = 8;
+    _maxHoraGantt = 23;
+    _welcome = true;
   }
 
   Future<File> get _localFile async {
     final directory = await getApplicationDocumentsDirectory();
     return File('${directory.path}/autistapp_settings.json');
   }
+
+  final List<Color> colors = [
+    Colors.brown,
+    Colors.red,
+    Color.fromARGB(255, 148, 110, 145),
+    Colors.orange,
+    Colors.yellow,
+    Colors.white,
+    Colors.lime,
+    Colors.lightGreen,
+    Colors.green,
+    Color.fromARGB(255, 28, 163, 157),
+    Colors.blue,
+    const Color.fromRGBO(7, 63, 160, 1),
+    Colors.blueGrey,
+    Colors.purple,
+    Colors.deepPurple,
+    const Color.fromRGBO(217, 4, 160, 1),
+  ];
+
+/* ICONOS Y LABELS DE ÁMBITOS */
+  final List<PairAmbitoIcono> listaAmbitos = [
+    PairAmbitoIcono(
+        ambito: "Académico/Laboral",
+        icono: Icons.work_outline_rounded,
+        color: Colors.red,
+        emoji: "💼"),
+    PairAmbitoIcono(
+        ambito: "Social",
+        icono: Icons.people_rounded,
+        color: Colors.lightGreen,
+        emoji: "👥"),
+    PairAmbitoIcono(
+        ambito: "Personal",
+        icono: Icons.person,
+        color: Colors.lightBlue,
+        emoji: "😇")
+  ];
+
+  String getTextoAmbito(int ambito) {
+    return (ambito >= 0 && ambito < listaAmbitos.length)
+        ? listaAmbitos[ambito].ambito
+        : "Otro";
+  }
+
+  String getTextoPrioridad(int prio) {
+    return (prio == 0)
+        ? "Baja"
+        : (prio == 1)
+            ? "Media"
+            : (prio == 2)
+                ? "Alta"
+                : "Otra";
+  }
+
+  Icon getIconoAmbitoBoton(int ambito, int selected) {
+    IconData iconData = listaAmbitos[ambito].icono;
+    Color color = ambito == selected ? Colors.white : Colors.black;
+    return Icon(iconData, color: color);
+  }
+
+  Icon getIconoAmbito(int ambito) {
+    return Icon(listaAmbitos[ambito].icono);
+  }
+
+  Icon? getRutinaIcon(int index) {
+    if (index > rutinas.length - 1) {
+      return null;
+    }
+
+    return Icon(rutinas[index].icono);
+  }
+
+  List<RutinaGenerador> rutinas = [
+    RutinaGenerador(nombre: "Ducharse", icono: Icons.shower, emoji: "🚿"),
+    RutinaGenerador(
+        nombre: "Desayuno", icono: Icons.breakfast_dining, emoji: "🥞"),
+    RutinaGenerador(nombre: "Tomar una fruta", icono: Icons.apple, emoji: "🍎"),
+    RutinaGenerador(
+        nombre: "Vaso de agua 1", icono: Icons.local_drink, emoji: "💧"),
+    RutinaGenerador(nombre: "Hacer tu cama", icono: Icons.bed, emoji: "🛏"),
+    RutinaGenerador(
+        nombre: "Limpiar la casa (si no tienes que ir a trabajar)",
+        icono: Icons.cleaning_services,
+        emoji: "🧹"),
+    RutinaGenerador(
+        nombre: "Gestionar papeleos",
+        icono: Icons.document_scanner,
+        emoji: "🧹"),
+    RutinaGenerador(
+        nombre: "Vaso de agua 2", icono: Icons.local_drink, emoji: "💧"),
+    RutinaGenerador(
+        nombre: "Hacer la comida", icono: Icons.microwave, emoji: "🍳"),
+    RutinaGenerador(nombre: "Almorzar", icono: Icons.restaurant, emoji: "🍚"),
+    RutinaGenerador(nombre: "Tomar una fruta", icono: Icons.apple, emoji: "🍐"),
+    RutinaGenerador(
+        nombre: "Vaso de agua 3", icono: Icons.local_drink, emoji: "💧"),
+    RutinaGenerador(
+        nombre: "Hacer deporte", icono: Icons.run_circle, emoji: "🏃‍♂️"),
+    RutinaGenerador(
+        nombre: "Vaso de agua 4", icono: Icons.local_drink, emoji: "💧"),
+    RutinaGenerador(
+        nombre: "Merienda una fruta", icono: Icons.apple, emoji: "🍊"),
+    RutinaGenerador(
+        nombre: "Un rato de relax", icono: Icons.gamepad, emoji: "🎮"),
+    RutinaGenerador(
+        nombre: "Vaso de agua 5", icono: Icons.local_drink, emoji: "💧"),
+    RutinaGenerador(nombre: "Cenar", icono: Icons.kitchen, emoji: "🍞"),
+    RutinaGenerador(
+        nombre: "Vaso de agua 6", icono: Icons.local_drink, emoji: "💧"),
+    RutinaGenerador(
+        nombre: "Lavarse los dientes",
+        icono: Icons.emoji_emotions,
+        emoji: "🦷"),
+  ];
+
+  List<Color> prioridadesColor = [
+    Colors.green,
+    Colors.amber,
+    Colors.red,
+  ];
+
+  List<String> prioridadesEmoji = [
+    "🟢",
+    "🟡",
+    "🔴",
+  ];
+
+  List<IconData> prioridadesIcono = [
+    Icons.low_priority,
+    Icons.trending_flat,
+    Icons.priority_high
+  ];
 }

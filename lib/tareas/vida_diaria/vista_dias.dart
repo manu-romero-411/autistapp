@@ -1,6 +1,7 @@
-import 'package:autistapp/apuntes/audio/apuntes_audio.dart';
+import 'package:autistapp/apuntes/audio/lista_notas_voz.dart';
 import 'package:autistapp/apuntes/audio/vista_grabador_audio.dart';
-import 'package:autistapp/apuntes/texto/apuntes_texto.dart';
+import 'package:autistapp/apuntes/texto/lista_notas_texto.dart';
+import 'package:autistapp/apuntes/texto/vista_editor_texto.dart';
 import 'package:autistapp/inicio/ajustes.dart';
 import 'package:autistapp/tareas/vida_diaria/dia.dart';
 import 'package:flutter/material.dart';
@@ -183,11 +184,15 @@ class _VistaDiaState extends State<VistaDia> {
                                   style: TextStyle(fontSize: 32),
                                 ),
 
-              Text(
-                dia.texto,
-                style:
-                    const TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Text(
+                  dia.texto,
+                  style: const TextStyle(
+                      fontSize: 14, fontStyle: FontStyle.italic),
+                ),
               ),
+              const SizedBox(height: 16),
               listaNotasTexto.toList().isNotEmpty
                   ? Card(
                       shape: RoundedRectangleBorder(
@@ -197,22 +202,24 @@ class _VistaDiaState extends State<VistaDia> {
                       child: Column(
                         children: [
                           const SizedBox(height: 10, width: 1),
-
                           const Text(
                             'Notas de texto',
                             style: TextStyle(
                                 fontSize: 18, fontWeight: FontWeight.bold),
-                          ), // Espacio entre botones
+                          ),
                           const SizedBox(height: 5, width: 2),
-
                           ListView.builder(
-                            // Mostrar una lista con los elementos de dia.notasVoz
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: listaNotasTexto.toList().length,
                             itemBuilder: (context, index) {
                               return ListTile(
                                 leading: const Icon(Icons.text_snippet),
+                                trailing: Icon(widget
+                                    .ajustes
+                                    .listaAmbitos[
+                                        listaNotasTexto.toList()[index].ambito]
+                                    .icono),
                                 title: Text(
                                     listaNotasTexto.toList()[index].titulo),
                                 onTap: () {
@@ -269,6 +276,11 @@ class _VistaDiaState extends State<VistaDia> {
                             itemBuilder: (context, index) {
                               return ListTile(
                                 leading: const Icon(Icons.mic),
+                                trailing: Icon(widget
+                                    .ajustes
+                                    .listaAmbitos[
+                                        listaNotasVoz.toList()[index].ambito]
+                                    .icono),
                                 title: Text(
                                     listaNotasVoz.toList()[index].descripcion),
                                 onTap: () {
@@ -277,7 +289,11 @@ class _VistaDiaState extends State<VistaDia> {
                                     MaterialPageRoute(
                                       builder: (context) => GrabadorAudio(
                                           nota: listaNotasVoz.notas[index],
-                                          ajustes: widget.ajustes),
+                                          ajustes: widget.ajustes,
+                                          listaNotasVoz: listaNotasVoz,
+                                          onUpdateLista: () {
+                                            setState(() {});
+                                          }),
                                     ),
                                   )
                                       .then((_) {

@@ -77,7 +77,7 @@ class _AutistAppMainState extends State<AutistAppMain> {
                 onThemeChanged: (value) => theme = value,
                 onColorSelected: (colorSel) => selectedColor = colorSel,
               ),
-          '/home': (context) => VistaTareas(
+          '/home': (context) => VistaInicio(
                 ajustes: ajustes,
                 onThemeChanged: (value) => theme = value,
                 onChangeColour: (colorSel) => selectedColor = colorSel,

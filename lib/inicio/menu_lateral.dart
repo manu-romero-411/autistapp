@@ -1,11 +1,11 @@
 import 'package:autistapp/apuntes/audio/vista_lista_notas_voz.dart';
-import 'package:autistapp/apuntes/texto/apuntes_texto.dart';
+import 'package:autistapp/apuntes/texto/vista_lista_notas_texto.dart';
 import 'package:autistapp/autoayuda/contactos/VistaContactos.dart';
 import 'package:autistapp/inicio/vista_about.dart';
 import 'package:autistapp/inicio/ajustes.dart';
 import 'package:autistapp/inicio/vista_ayuda.dart';
-import 'package:autistapp/planes/vista_lista_planes.dart';
-import 'package:autistapp/planes/vista_plan.dart';
+import 'package:autistapp/planes/lista_planes.dart';
+import 'package:autistapp/planes/vista_meta_lista_planes.dart';
 import 'package:autistapp/tareas/vida_diaria/vista_dias.dart';
 import 'package:flutter/material.dart';
 
@@ -34,8 +34,18 @@ class _MenuLateralState extends State<MenuLateral> {
   @override
   Widget build(BuildContext context) {
     final children = <Widget>[
-      const DrawerHeader(child: Text('Menú')),
-      ListTile(
+      const DrawerHeader(
+        decoration: BoxDecoration(
+            color: Colors.blue,
+            image: DecorationImage(
+                image: AssetImage("assets/images/menu.png"),
+                fit: BoxFit.cover)),
+        child: Text(
+          'Menú',
+          style: TextStyle(color: Colors.white, fontSize: 16),
+        ),
+      ),
+      /*ListTile(
         dense: true,
         leading: const Icon(Icons.phone),
         title: const Text('Contactos de emergencia'),
@@ -46,7 +56,7 @@ class _MenuLateralState extends State<MenuLateral> {
                 builder: (context) => VistaContactos(ajustes: widget.ajustes)),
           );
         },
-      ),
+      ),*/
       ListTile(
         leading: const Icon(Icons.calendar_month),
         dense: true,
@@ -89,11 +99,12 @@ class _MenuLateralState extends State<MenuLateral> {
         dense: true,
         title: const Text('Planificaciones de días'),
         onTap: () {
+          ListaPlanes test = ListaPlanes(id: "test", name: "test");
           Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (context) =>
-                    VistaListaPlanes(ajustes: widget.ajustes)),
+                    VistaMetaListaPlanes(ajustes: widget.ajustes)),
           );
         },
       ),

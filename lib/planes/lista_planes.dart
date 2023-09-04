@@ -4,10 +4,12 @@ import 'package:autistapp/planes/plan.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ListaPlanes {
-  List<Plan> _planes = [];
   String id;
+  String name;
 
-  ListaPlanes({required this.id});
+  ListaPlanes({required this.id, required this.name});
+
+  List<Plan> _planes = [];
 
   Future<File> get _localFile async {
     final directory = await getApplicationDocumentsDirectory();
@@ -22,6 +24,13 @@ class ListaPlanes {
     return _planes.length;
   }
 
+  void ordenarLista() {
+    _planes.sort((a, b) => int.parse(
+            "${a.horaInicio}${a.minInicio}${a.horaFin}${a.minFin}")
+        .compareTo(
+            int.parse("${b.horaInicio}${b.minInicio}${b.horaFin}${b.minFin}")));
+  }
+
   Future<void> cargarDatos() async {
     try {
       final file = await _localFile;
@@ -33,8 +42,9 @@ class ListaPlanes {
           horaInicio: x['horaInicio'],
           minInicio: x['minInicio'],
           horaFin: x['horaFin'],
-          minFin: x['minInicio'],
+          minFin: x['minFin'],
           tipo: x['tipo'])));
+      //ordenarLista();
     } catch (e) {
       print('Error al cargar datos: $e');
     }
@@ -43,7 +53,7 @@ class ListaPlanes {
   Future<File> guardarDatos() async {
     final file = await _localFile;
     return file.writeAsString(jsonEncode({
-      'tasks': List<dynamic>.from(_planes.map((x) => {
+      'plans': List<dynamic>.from(_planes.map((x) => {
             'id': x.id,
             'nombre': x.nombre,
             'horaInicio': x.horaInicio,
@@ -55,32 +65,33 @@ class ListaPlanes {
     }));
   }
 
-  void agregarTarea(String uuid, String nombre, int horaInicio, int minInicio,
-      int horaFin, int minFin, int tipo) {
+  void agregarTarea(String uuid, String nombre, int tipo, int horaInicio,
+      int minInicio, int horaFin, int minFin) {
     try {
-      Plan tareaExistente = _planes.firstWhere((tarea) => tarea.id == uuid);
-      tareaExistente.nombre = nombre;
-      tareaExistente.horaInicio = horaInicio;
-      tareaExistente.minInicio = minInicio;
-      tareaExistente.horaFin = horaFin;
-      tareaExistente.minFin = minFin;
-      tareaExistente.tipo = tipo;
+      Plan planExistente = _planes.firstWhere((plan) => plan.id == uuid);
+      planExistente.nombre = nombre;
+      planExistente.tipo = tipo;
+      planExistente.horaInicio = horaInicio;
+      planExistente.minInicio = minInicio;
+      planExistente.horaFin = horaFin;
+      planExistente.minFin = minFin;
     } catch (e) {
       _planes.add(Plan(
         id: uuid,
         nombre: nombre,
+        tipo: tipo,
         horaInicio: horaInicio,
         minInicio: minInicio,
         horaFin: horaFin,
         minFin: minFin,
-        tipo: tipo,
       ));
     }
+    //ordenarLista();
     guardarDatos();
   }
 
   void eliminarTarea(String id) {
-    _planes.removeWhere((tareaBuscada) => tareaBuscada.id == id);
+    _planes.removeWhere((planBuscada) => planBuscada.id == id);
     guardarDatos();
   }
 }

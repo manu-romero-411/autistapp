@@ -230,6 +230,9 @@ class _VistaNotasTextoState extends State<VistaNotasTexto> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+                backgroundColor: widget._ajustes.color,
+        foregroundColor: widget._ajustes.fgColor,
+
         heroTag: "btn3",
         child: const Icon(Icons.add),
         onPressed: () {
@@ -355,6 +358,9 @@ class _EditorNotasState extends State<EditorNotas> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   FloatingActionButton(
+                            backgroundColor: widget._ajustes.color,
+        foregroundColor: widget._ajustes.fgColor,
+
                     backgroundColor: _mood == 0
                         ? Colors.green
                         : Color.fromARGB(255, 212, 222, 219),

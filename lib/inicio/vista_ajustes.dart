@@ -2,10 +2,17 @@ import 'package:autistapp/inicio/ajustes.dart';
 import 'package:flutter/material.dart';
 
 class VistaAjustes extends StatefulWidget {
-  final Function(Color) onColorSelected;
-  final Ajustes ajustes;
+  final Function(Color) _onColorSelected;
+  final Function() _onChangedAjustes;
+  final Ajustes _ajustes;
 
-  const VistaAjustes({required this.ajustes, required this.onColorSelected});
+  const VistaAjustes(
+      {required Ajustes ajustes,
+      required dynamic Function(Color) onColorSelected,
+      required onChangedAjustes})
+      : _ajustes = ajustes,
+        _onColorSelected = onColorSelected,
+        _onChangedAjustes = onChangedAjustes;
 
   @override
   _VistaAjustesState createState() => _VistaAjustesState();
@@ -17,18 +24,40 @@ class _VistaAjustesState extends State<VistaAjustes> {
   String _frequency = '1 hora';
 
   Color? selectedColor;
+  int? _horaMin;
+  int? _horaMax;
 
   @override
   void initState() {
     super.initState();
-    selectedColor = widget.ajustes.color;
-    _textController = TextEditingController(text: widget.ajustes.name);
+    _horaMin = widget._ajustes.minHoraGantt;
+    _horaMax = widget._ajustes.maxHoraGantt;
+
+    selectedColor = widget._ajustes.color;
+    _textController = TextEditingController(text: widget._ajustes.name);
   }
 
-  @override
-  void dispose() {
-    widget.ajustes.name = _textController.text;
-    super.dispose();
+  void guardarSalir() {
+    setState(() {
+      if (_horaMax! <= _horaMin!) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text(
+                  'ERROR: La hora de fin no puede ser más temprana que la de inicio.')),
+        );
+      } else {
+        widget._ajustes.name = _textController.text;
+        widget._ajustes.minHoraGantt = _horaMin;
+        widget._ajustes.maxHoraGantt = _horaMax;
+        widget._onChangedAjustes();
+        if (!context.mounted) return;
+
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ajustes guardados correctamente')),
+        );
+      }
+    });
   }
 
   @override
@@ -36,119 +65,224 @@ class _VistaAjustesState extends State<VistaAjustes> {
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(
-          color: widget.ajustes.fgColor,
-          onPressed: () {
-            setState(() {
-              widget.ajustes.name = _textController.text;
-              Navigator.pop(context);
-            });
-          },
+          color: widget._ajustes.fgColor,
         ),
         centerTitle: true,
-        backgroundColor: widget.ajustes.color,
-        title: Text("Ajustes", style: TextStyle(color: widget.ajustes.fgColor)),
+        backgroundColor: widget._ajustes.color,
+        title:
+            Text("Ajustes", style: TextStyle(color: widget._ajustes.fgColor)),
         elevation: 0,
+        actions: [
+          IconButton(
+            color: widget._ajustes.fgColor,
+            icon: const Icon(Icons.save),
+            onPressed: guardarSalir,
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(children: [
-          const SizedBox(
-            height: 28,
+          const SizedBox(height: 16),
+          const Text(
+            "Tus datos personales",
+            style: TextStyle(fontSize: 16),
           ),
-          const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Padding(
+            padding:
+                const EdgeInsets.only(top: 10, bottom: 20, left: 16, right: 16),
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.all(8),
+                child: Row(
                   children: [
-                    Text(
+                    const SizedBox(width: 10),
+                    const Icon(Icons.person),
+                    const SizedBox(width: 10),
+                    const Text(
                       'Nombre',
-                      textAlign: TextAlign.left,
-                      style: TextStyle(
-                        fontSize: 16,
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: TextField(
+                        controller: _textController,
+                        maxLines: null,
+                        keyboardType: TextInputType.multiline,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16.0),
+                          ),
+                          labelText: 'Texto',
+                          hintText: "Introduce tu nombre aquí",
+                        ),
                       ),
-                    )
-                  ])),
-          const SizedBox(
-            height: 10,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: TextField(
-              controller: _textController,
-              maxLines: null,
-              keyboardType: TextInputType.multiline,
-              decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.0),
-                  ),
-                  labelText: 'Texto',
-                  hintText: "Introduce tu nombre aquí"),
-            ),
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Habilitar notificaciones',
-                  style: TextStyle(fontSize: 16),
+                    ),
+                  ],
                 ),
-                Switch(
-                  value: _notificationsEnabled,
-                  onChanged: (bool newValue) {
-                    setState(() {
-                      _notificationsEnabled = newValue;
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-          if (_notificationsEnabled)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Frecuencia', style: TextStyle(fontSize: 16)),
-                  DropdownButton<String>(
-                    value: _frequency,
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _frequency = newValue!;
-                      });
-                    },
-                    items: <String>['1 hora', '2 horas', '3 horas']
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                  ),
-                ],
               ),
             ),
-          const SizedBox(
-            height: 20,
           ),
-          const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'Colores de la app',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
+          const Text(
+            "Tablas de planificaciones",
+            style: TextStyle(fontSize: 16),
+          ),
+          Padding(
+            padding:
+                const EdgeInsets.only(top: 10, bottom: 20, left: 16, right: 16),
+            child: Card(
+              child: Container(
+                margin: const EdgeInsets.only(left: 20, right: 20),
+                child: Column(children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.schedule),
+                          SizedBox(width: 10),
+                          Text(
+                            'Hora inicial',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ],
+                      ),
+                      DropdownButton<int>(
+                        value: _horaMin,
+                        onChanged: (int? newValue) {
+                          setState(() {
+                            _horaMin = newValue!;
+                          });
+                        },
+                        items: List.generate(24, (index) => index)
+                            .map<DropdownMenuItem<int>>((int value) {
+                          return DropdownMenuItem<int>(
+                            value: value,
+                            child: Text("$value:00"),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.schedule),
+                          SizedBox(width: 10),
+                          Text(
+                            'Hora final',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ],
+                      ),
+                      DropdownButton<int>(
+                        value: _horaMax,
+                        onChanged: (int? newValue) {
+                          setState(() {
+                            _horaMax = newValue!;
+                          });
+                        },
+                        items: List.generate(24, (index) => index)
+                            .map<DropdownMenuItem<int>>((int value) {
+                          return DropdownMenuItem<int>(
+                            value: value,
+                            child: Text("$value:00"),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ]),
+              ),
+            ),
+          ),
+          const Text(
+            "Notificaciones",
+            style: TextStyle(fontSize: 16),
+          ),
+          Padding(
+              padding: const EdgeInsets.only(
+                  top: 10, bottom: 20, left: 16, right: 16),
+              child: Card(
+                child: Container(
+                  margin: const EdgeInsets.only(left: 20, right: 20),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.notifications),
+                              SizedBox(width: 10),
+                              Text(
+                                'Notificaciones',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ],
+                          ),
+                          Switch(
+                            value: _notificationsEnabled,
+                            onChanged: (bool newValue) {
+                              setState(() {
+                                _notificationsEnabled = newValue;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      if (_notificationsEnabled)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.hourglass_bottom),
+                                SizedBox(width: 10),
+                                Text(
+                                  'Frecuencia',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                              ],
+                            ),
+                            DropdownButton<String>(
+                              value: _frequency,
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  _frequency = newValue!;
+                                });
+                              },
+                              items: <String>[
+                                '1 hora',
+                                '2 horas',
+                                '3 horas'
+                              ].map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
                 ),
               )),
+          const Text(
+            "Colores de la app",
+            style: TextStyle(fontSize: 16),
+          ),
           const SizedBox(
             height: 20,
           ),
           ColorSelectionGrid(
-              ajustes: widget.ajustes, onColorSelected: widget.onColorSelected),
+              ajustes: widget._ajustes,
+              onColorSelected: widget._onColorSelected),
+          const SizedBox(
+            height: 24,
+          ),
         ]),
       ),
     );

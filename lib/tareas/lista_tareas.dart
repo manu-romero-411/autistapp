@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:autistapp/tareas/tarea.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ListaTareas {
@@ -30,6 +31,25 @@ class ListaTareas {
     return (_tareas.where((tarea) => tarea.completada).length);
   }
 
+  bool getPendientesOtrosDias(Tarea tarea) {
+    if ((int.parse(DateFormat("yyyyMMdd").format(DateTime.now())) >
+            int.parse(DateFormat("yyyyMMdd").format(tarea.fechaInicio))) &&
+        !tarea.completada) {
+      return true;
+    }
+    return false;
+  }
+
+  int getCountPendientes() {
+    int suma = 0;
+    for (int i = 0; i < _tareas.length; ++i) {
+      if (getPendientesOtrosDias(_tareas[i])) {
+        suma++;
+      }
+    }
+    return suma;
+  }
+
   Future<void> cargarDatos() async {
     try {
       final file = await _localFile;
@@ -46,9 +66,7 @@ class ListaTareas {
           intervalo: x['intervalo'],
           unidad: x['unidad'],
           completada: x['completada'] == true ? true : false)));
-    } catch (e) {
-      print('Error al cargar datos: $e');
-    }
+    } catch (e) {}
   }
 
   Future<File> guardarDatos() async {

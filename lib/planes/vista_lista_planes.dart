@@ -1,107 +1,57 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:autistapp/apuntes/texto/apuntes_texto.dart';
+import 'dart:math';
+
 import 'package:autistapp/inicio/ajustes.dart';
+import 'package:autistapp/planes/meta_lista_planes.dart';
+import 'package:autistapp/planes/plan.dart';
 import 'package:autistapp/planes/lista_planes.dart';
-import 'package:autistapp/planes/vista_plan.dart';
+import 'package:autistapp/planes/vista_editor_planes.dart';
 import 'package:diacritic/diacritic.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
-
-class MetaListaPlanes {
-  List<ListaPlanes> _planes = [];
-
-  Future<File> get _localFile async {
-    final directory = await getApplicationDocumentsDirectory();
-    return File('${directory.path}/autistapp_plans_all.json');
-  }
-
-  List<ListaPlanes> toList() {
-    return _planes;
-  }
-
-  int getSize() {
-    return _planes.length;
-  }
-
-  Future<void> cargarDatos() async {
-    try {
-      final file = await _localFile;
-      final contents = await file.readAsString();
-      final data = jsonDecode(contents);
-      _planes = List<ListaPlanes>.from(data['planLists'].map((x) => ListaPlanes(
-            id: x['id'],
-          )));
-      for (int i = 0; i < _planes.length; ++i) {
-        _planes[i].cargarDatos();
-      }
-    } catch (e) {
-      print('Error al cargar datos: $e');
-    }
-  }
-
-  Future<File> guardarDatos() async {
-    final file = await _localFile;
-    return file.writeAsString(jsonEncode({
-      'planLists': List<dynamic>.from(_planes.map((x) => {
-            'id': x.id,
-          })),
-    }));
-  }
-
-  void agregarListaPlanes(String uuid) {
-    try {
-      ListaPlanes tareaExistente =
-          _planes.firstWhere((tarea) => tarea.id == uuid);
-      tareaExistente.id;
-    } catch (e) {
-      _planes.add(ListaPlanes(
-        id: uuid,
-      ));
-      for (int i = 0; i < _planes.length; ++i) {
-        _planes[i].cargarDatos();
-        _planes[i].guardarDatos();
-      }
-    }
-    guardarDatos();
-  }
-
-  void eliminarListaTareas(String id) {
-    _planes.removeWhere((tareaBuscada) => tareaBuscada.id == id);
-    guardarDatos();
-  }
-}
 
 class VistaListaPlanes extends StatefulWidget {
-  final Ajustes ajustes;
-  const VistaListaPlanes({required this.ajustes});
+  final Ajustes _ajustes;
+  final ListaPlanes _listaPlanes;
+  final MetaListaPlanes _meta;
+  final Function() _onChangeNombre;
+
+  const VistaListaPlanes(
+      {super.key,
+      required ListaPlanes listaPlanes,
+      required meta,
+      required Ajustes ajustes,
+      required onChangeNombre})
+      : _ajustes = ajustes,
+        _listaPlanes = listaPlanes,
+        _meta = meta,
+        _onChangeNombre = onChangeNombre;
 
   @override
   _VistaListaPlanesState createState() => _VistaListaPlanesState();
 }
 
 class _VistaListaPlanesState extends State<VistaListaPlanes> {
-  final metaListaPlanes = MetaListaPlanes();
-  List<ListaPlanes> busqueda = [];
+  List<Plan> busqueda = [];
   bool isSearch = false;
+  late TextEditingController _descController;
 
   @override
   void initState() {
-    metaListaPlanes.cargarDatos().then((_) {
+    super.initState();
+    _descController = TextEditingController(text: widget._listaPlanes.name);
+
+    widget._listaPlanes.cargarDatos().then((_) {
       setState(() {
-        busqueda = metaListaPlanes.toList();
+        busqueda = widget._listaPlanes.toList();
       });
     });
-    super.initState();
   }
 
   void _filtrarBusqueda(String valor) {
     setState(() {
       if (valor.isEmpty) {
-        busqueda = metaListaPlanes.toList();
+        busqueda = widget._listaPlanes.toList();
       } else {
-        busqueda = metaListaPlanes
+        busqueda = widget._listaPlanes
             .toList()
             .where((nota) => _operadorBusqueda(nota, removeDiacritics(valor)))
             .toList();
@@ -109,107 +59,174 @@ class _VistaListaPlanesState extends State<VistaListaPlanes> {
     });
   }
 
-  bool _operadorBusqueda(ListaPlanes nota, String valor) {
-    for (int i = 0; i < nota.toList().length; ++i) {
-      if (removeDiacritics(nota.toList()[i].nombre.toLowerCase())
-          .contains(valor)) {
-        return true;
-      }
-    }
+  bool _operadorBusqueda(Plan nota, String valor) {
+    if (valor == "") return true;
+    if (removeDiacritics(nota.nombre.toLowerCase()).contains(valor))
+      return true;
+    //if (nota.texto.toLowerCase().contains(valor)) return true;
 
     return false;
+  }
+
+  void actualizarListaPlanes() {
+    setState(() {
+      widget._listaPlanes.cargarDatos();
+    });
+  }
+
+  void guardarSalir() {
+    widget._listaPlanes.name = _descController.text;
+    widget._meta.agregarTarea(widget._listaPlanes.id, _descController.text);
+    widget._onChangeNombre();
+    setState(() {});
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Cambios guardados')),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(color: widget.ajustes.fgColor),
-        backgroundColor: widget.ajustes.color,
-        title: Text(
-          'Lista de notas de voz',
-          style: TextStyle(color: widget.ajustes.fgColor),
+        leading: BackButton(
+          color: widget._ajustes.fgColor,
         ),
+        backgroundColor: widget._ajustes.color,
+        title: Text('Editar planning...',
+            style: TextStyle(color: widget._ajustes.fgColor)),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
-            color: widget.ajustes.fgColor,
+            color: widget._ajustes.fgColor,
             onPressed: () {
               setState(() {
                 isSearch = !isSearch;
               });
             },
           ),
+          IconButton(
+            color: widget._ajustes.fgColor,
+            icon: const Icon(Icons.save),
+            onPressed: guardarSalir,
+          ),
         ],
       ),
-      body: Column(
-        children: [
-          if (isSearch) const SizedBox(height: 20),
-          if (isSearch)
-            Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: TextField(
-                  onChanged: (value) => _filtrarBusqueda(value),
-                  decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
+      body: widget._listaPlanes.getSize() == 0
+          ? const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Center(
+                    child: Text(
+                      textAlign: TextAlign.center,
+                      "No hay planes hechos.\n\nToca el botón + para crear uno.",
+                      style: TextStyle(fontSize: 22),
+                    ),
+                  ),
+                ],
+              ))
+          : Column(
+              children: [
+                const SizedBox(
+                  height: 24,
+                ),
+                Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: TextField(
+                      controller: _descController,
+                      maxLength: 100,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        labelText: 'Nombre',
                       ),
-                      labelText: "Busca notas...",
-                      suffixIcon: const Icon(Icons.search)),
-                )),
-          const SizedBox(
-            height: 20,
-          ),
-          Expanded(
-            child: ListView.builder(
-              scrollDirection: Axis.vertical,
-              shrinkWrap: true,
-              itemCount: busqueda.length,
-              itemBuilder: (context, index) {
-                final reversedIndex = busqueda.length - 1 - index;
-                final lista = busqueda[reversedIndex];
-                return ListTile(
-                  title: Text(lista.id),
-                  onTap: () {
-                    Navigator.of(context)
-                        .push(
-                      MaterialPageRoute(
-                        builder: (context) => VistaDiagramaTareas(
-                            ajustes: widget.ajustes, planes: lista),
-                      ),
-                    )
-                        .then((_) {
-                      metaListaPlanes.cargarDatos().then((_) {
-                        setState(() {
-                          busqueda = metaListaPlanes.toList();
-                        });
-                      });
-                    });
-                  },
-                );
-              },
+                    )),
+                if (isSearch)
+                  Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: TextField(
+                        onChanged: (value) => _filtrarBusqueda(value),
+                        decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16.0),
+                            ),
+                            labelText: "Busca planes...",
+                            suffixIcon: const Icon(Icons.search)),
+                      )),
+                const SizedBox(
+                  height: 16,
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    scrollDirection: Axis.vertical,
+                    shrinkWrap: true,
+                    itemCount: busqueda.length,
+                    itemBuilder: (context, index) {
+                      final reversedIndex = busqueda.length - 1 - index;
+                      final plan = busqueda[reversedIndex];
+                      return ListTile(
+                        leading: Transform.rotate(
+                          angle: pi * 3 / 2,
+                          child: Icon(Icons.waterfall_chart,
+                              color: widget
+                                  ._ajustes.listaAmbitos[plan.tipo].color),
+                        ),
+                        trailing:
+                            Icon(widget._ajustes.listaAmbitos[plan.tipo].icono),
+                        title: Text(plan.nombre),
+                        subtitle: Text(
+                            "${plan.horaInicio}:${plan.minInicio} - ${plan.horaFin}:${plan.minFin}"),
+                        onTap: () {
+                          Navigator.of(context)
+                              .push(
+                            MaterialPageRoute(
+                              builder: (context) => EditorPlanes(
+                                  plan: plan,
+                                  ajustes: widget._ajustes,
+                                  listaPlanes: widget._listaPlanes,
+                                  onChangePlanes: actualizarListaPlanes),
+                            ),
+                          )
+                              .then((_) {
+                            widget._listaPlanes.cargarDatos().then((_) {
+                              setState(() {
+                                busqueda = widget._listaPlanes.toList();
+                              });
+                            });
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: widget._ajustes.color,
+        foregroundColor: widget._ajustes.fgColor,
         heroTag: "btn3",
         child: const Icon(Icons.add),
         onPressed: () {
-          /*
           Navigator.of(context)
               .push(
             MaterialPageRoute(
-              builder: (context) => GrabadorAudio(ajustes: widget.ajustes),
+              builder: (context) => EditorPlanes(
+                ajustes: widget._ajustes,
+                listaPlanes: widget._listaPlanes,
+                onChangePlanes: actualizarListaPlanes,
+              ),
             ),
           )
               .then((_) {
-            metaListaPlanes.cargarDatos().then((_) {
+            widget._listaPlanes.cargarDatos().then((_) {
               setState(() {
-                busqueda = metaListaPlanes.toList();
+                busqueda = widget._listaPlanes.toList();
               });
             });
-          });*/
+          });
         },
       ),
     );

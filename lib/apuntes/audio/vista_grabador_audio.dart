@@ -1,5 +1,7 @@
 import 'dart:async';
-import 'package:autistapp/apuntes/audio/apuntes_audio.dart';
+import 'package:autistapp/apuntes/audio/lista_notas_voz.dart';
+import 'package:autistapp/apuntes/audio/nota_voz.dart';
+import 'package:autistapp/apuntes/widgets_editores.dart';
 import 'package:autistapp/inicio/ajustes.dart';
 import 'package:flutter/material.dart';
 import 'package:record/record.dart';
@@ -8,10 +10,19 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:share_plus/share_plus.dart';
 
 class GrabadorAudio extends StatefulWidget {
-  final NotaVoz? nota;
-  final Ajustes ajustes;
-
-  const GrabadorAudio({this.nota, required this.ajustes});
+  final NotaVoz? _nota;
+  final Ajustes _ajustes;
+  final ListaNotasVoz _listaNotasVoz;
+  final Function() _onUpdateLista;
+  const GrabadorAudio(
+      {NotaVoz? nota,
+      required Ajustes ajustes,
+      required ListaNotasVoz listaNotasVoz,
+      required onUpdateLista})
+      : _ajustes = ajustes,
+        _nota = nota,
+        _listaNotasVoz = listaNotasVoz,
+        _onUpdateLista = onUpdateLista;
   @override
   _GrabadorAudioState createState() => _GrabadorAudioState();
 
@@ -19,7 +30,6 @@ class GrabadorAudio extends StatefulWidget {
 }
 
 class _GrabadorAudioState extends State<GrabadorAudio> {
-  final listaNotasVoz = ListaNotasVoz();
   late Record audioRecord;
   late AudioPlayer audioPlayer;
   bool isRecording = false;
@@ -34,27 +44,26 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
 
   String audioPath = "";
 
-  late TextEditingController _descController;
+  String titulo = "";
+
   late int _ambito;
   late int _mood;
 
   @override
   void initState() {
     super.initState();
-    listaNotasVoz.cargarDatos();
-    _descController = TextEditingController(text: widget.nota?.descripcion);
     _ambito = 0;
     _mood = 1;
 
-    listaNotasVoz.cargarDatos().then((_) {
+    widget._listaNotasVoz.cargarDatos().then((_) {
       setState(() {});
     });
     audioPlayer = AudioPlayer();
     audioRecord = Record();
-    if (widget.nota != null) {
-      _descController.text = widget.nota!.descripcion;
-      _ambito = widget.nota!.ambito;
-      _mood = widget.nota!.mood;
+    if (widget._nota != null) {
+      titulo = widget._nota!.descripcion;
+      _ambito = widget._nota!.ambito;
+      _mood = widget._nota!.mood;
       audioPlayer.onPlayerStateChanged.listen((event) {
         if (event == PlayerState.completed) {
           setState(() {
@@ -134,14 +143,9 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
 
       elapsedTime = Duration.zero;
 
-      listaNotasVoz.agregarNota(
-          const Uuid().v4(),
-          audioPath,
-          _descController.text == ""
-              ? "Nota sin descripción"
-              : _descController.text,
-          _mood,
-          _ambito);
+      widget._listaNotasVoz.agregarNota(const Uuid().v4(), audioPath,
+          titulo == "" ? "Nota sin descripción" : titulo, _mood, _ambito);
+      widget._onUpdateLista();
 
       if (!context.mounted) return;
 
@@ -156,7 +160,7 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
 
   Future<void> playRecording() async {
     try {
-      String path = widget.nota?.audioFileName ?? audioPath;
+      String path = widget._nota?.audioFileName ?? audioPath;
       Source urlSource = UrlSource(path);
       await audioPlayer.play(urlSource);
       elapsedTime = Duration.zero;
@@ -235,150 +239,105 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
     }
   }
 
+  void _cambiarAmbito(int ambito) {
+    setState(() {
+      _ambito = ambito;
+    });
+  }
+
+  void _cambiarMood(int mood) {
+    setState(() {
+      _mood = mood;
+    });
+  }
+
+  void _cambiarTitulo(String tit) {
+    setState(() {
+      titulo = tit;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(color: widget.ajustes.fgColor),
-        backgroundColor: widget.ajustes.color,
+        leading: BackButton(color: widget._ajustes.fgColor),
+        backgroundColor: widget._ajustes.color,
         title: Text('Nota de voz',
-            style: TextStyle(color: widget.ajustes.fgColor)),
+            style: TextStyle(color: widget._ajustes.fgColor)),
         actions: [
-          if (widget.nota != null)
+          if (widget._nota != null)
             IconButton(
               icon: const Icon(Icons.delete),
-              color: widget.ajustes.fgColor,
+              color: widget._ajustes.fgColor,
               onPressed: () {
-                listaNotasVoz.eliminarNota(widget.nota!.id);
+                widget._listaNotasVoz.eliminarNota(widget._nota!.id);
+                widget._onUpdateLista();
                 Navigator.of(context).pop();
               },
             ),
-          if (widget.nota != null)
+          if (widget._nota != null)
             IconButton(
               icon: const Icon(Icons.share),
-              color: widget.ajustes.fgColor,
+              color: widget._ajustes.fgColor,
               onPressed: () async {
                 await Share.shareXFiles(
-                    [XFile(Uri.parse(widget.nota!.audioFileName).toString())]);
+                    [XFile(Uri.parse(widget._nota!.audioFileName).toString())]);
               },
             ),
-          if (widget.nota != null)
+          if (widget._nota != null)
             IconButton(
               icon: const Icon(Icons.save),
-              color: widget.ajustes.fgColor,
+              color: widget._ajustes.fgColor,
               onPressed: () {
-                widget.nota!.descripcion = _descController.text;
-                widget.nota!.ambito = _ambito;
-                widget.nota!.mood = _mood;
+                widget._nota!.descripcion = titulo;
+                widget._nota!.ambito = _ambito;
+                widget._nota!.mood = _mood;
 
-                listaNotasVoz.agregarNota(widget.nota!.id, audioPath,
-                    _descController.text, _mood, _ambito);
+                widget._listaNotasVoz.agregarNota(
+                    widget._nota!.id, audioPath, titulo, _mood, _ambito);
+                widget._onUpdateLista();
                 Navigator.pop(context);
               },
             ),
         ],
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          TextField(
-            controller: _descController,
-            maxLength: 100,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16.0),
-              ),
-              labelText: "Título",
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FloatingActionButton(
-                backgroundColor: _mood == 0
-                    ? Colors.green
-                    : const Color.fromARGB(255, 212, 222, 219),
-                heroTag: "feliz",
-                onPressed: () async {
-                  setState(() {
-                    _mood = 0;
-                  });
-                },
-                child: const Text("😄", style: TextStyle(fontSize: 32)),
-              ),
-              const SizedBox(width: 16), // Espacio entre botones
-              FloatingActionButton(
-                backgroundColor: _mood == 1
-                    ? Colors.amber
-                    : const Color.fromARGB(255, 212, 222, 219),
-                heroTag: "neutral",
-                onPressed: () async {
-                  setState(() {
-                    _mood = 1;
-                  });
-                },
-                child: const Text("😕", style: TextStyle(fontSize: 32)),
-              ),
-              const SizedBox(width: 16),
-              FloatingActionButton(
-                backgroundColor: _mood == 2
-                    ? Colors.red
-                    : const Color.fromARGB(255, 212, 222, 219),
-                heroTag: "triste",
-                onPressed: () async {
-                  setState(() {
-                    _mood = 2;
-                  });
-                },
-                child: const Text("😢", style: TextStyle(fontSize: 32)),
-              ),
-            ],
-          ),
-          DropdownButton<int>(
-            value: _ambito,
-            items: const [
-              DropdownMenuItem(
-                value: 0,
-                child: Text('⚙️ Académico/Laboral'),
-              ),
-              DropdownMenuItem(
-                value: 1,
-                child: Text('🗣 Social'),
-              ),
-              DropdownMenuItem(
-                value: 2,
-                child: Text('😇 Personal'),
-              ),
-            ],
-            onChanged: (value) {
-              if (widget.nota != null && value != null) {
-                setState(() {
-                  _ambito = value;
-                });
-              }
-            },
-          ),
-          Align(
-            alignment: Alignment.center,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Text(
-                  '${elapsedTime.inHours}:${elapsedTime.inMinutes.remainder(60).toString().padLeft(2, '0')}:${(elapsedTime.inSeconds.remainder(60)).toString().padLeft(2, '0')}.${(elapsedTime.inMilliseconds.remainder(1000) / 10).floor().toString().padLeft(2, '0')}',
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontFamily: 'Segment7',
-                    fontWeight: FontWeight.w400,
+      body: SingleChildScrollView(
+          child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  WidgetsEditores(
+                    ambito: _ambito,
+                    mood: _mood,
+                    descController: TextEditingController(text: titulo),
+                    cambiarAmbito: _cambiarAmbito,
+                    cambiarMood: _cambiarMood,
+                    cambiarTitulo: _cambiarTitulo,
+                    ajustes: widget._ajustes,
                   ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+                  Align(
+                    alignment: Alignment.center,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text(
+                          '${elapsedTime.inHours}:${elapsedTime.inMinutes.remainder(60).toString().padLeft(2, '0')}:${(elapsedTime.inSeconds.remainder(60)).toString().padLeft(2, '0')}.${(elapsedTime.inMilliseconds.remainder(1000) / 10).floor().toString().padLeft(2, '0')}',
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontFamily: 'Segment7',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ))),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
-      floatingActionButton: widget.nota != null
+      floatingActionButton: widget._nota != null
           ? Stack(
               children: [
                 if (isPlaying)
@@ -386,6 +345,8 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
                     bottom: 144,
                     right: 16,
                     child: FloatingActionButton(
+                      backgroundColor: widget._ajustes.color,
+                      foregroundColor: widget._ajustes.fgColor,
                       heroTag: "audioSpeed",
                       onPressed: changePlaybackRate,
                       child: Text(playbackRate.toStringAsFixed(1)),
@@ -396,6 +357,8 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
                     bottom: 80,
                     right: 16,
                     child: FloatingActionButton(
+                        backgroundColor: widget._ajustes.color,
+                        foregroundColor: widget._ajustes.fgColor,
                         heroTag: "audioStop",
                         onPressed: stopPlay,
                         child: const Icon(Icons.stop)),
@@ -404,6 +367,8 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
                   bottom: 16,
                   right: 16,
                   child: FloatingActionButton(
+                    backgroundColor: widget._ajustes.color,
+                    foregroundColor: widget._ajustes.fgColor,
                     heroTag: "audioPlay",
                     onPressed: () {
                       if (isPlaying) {
@@ -430,6 +395,8 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
                     bottom: 80,
                     right: 16,
                     child: FloatingActionButton(
+                      backgroundColor: widget._ajustes.color,
+                      foregroundColor: widget._ajustes.fgColor,
                       heroTag: "btn1",
                       onPressed:
                           isRecordingPaused ? resumeRecording : pauseRecording,
@@ -442,6 +409,8 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
                   bottom: 16,
                   right: 16,
                   child: FloatingActionButton(
+                    backgroundColor: widget._ajustes.color,
+                    foregroundColor: widget._ajustes.fgColor,
                     heroTag: "btn0",
                     onPressed: isRecording ? stopRecording : startRecording,
                     child: isRecording

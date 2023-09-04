@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 class Rutina {
   String _id;
   String _nombre;
-  TimeOfDay _hora;
+  TimeOfDay? _hora;
   bool _completada;
 
   get id => _id;
@@ -23,21 +23,21 @@ class Rutina {
   Rutina({
     required String id,
     required String nombre,
-    required TimeOfDay hora,
+    //TimeOfDay hora,
     required bool completada,
   })  : _completada = completada,
-        _hora = hora,
+        // _hora = hora,
         _nombre = nombre,
         _id = id;
 
-  DateTime getHoraAsDateTime() {
+  /* DateTime getHoraAsDateTime() {
     return DateTime(
         DateTime.now().year, // cualquier año
         DateTime.now().month, // cualquier mes
         DateTime.now().day, // cualquier día
         _hora.hour,
         _hora.minute);
-  }
+  }*/
 
   void setHoraFromDateTime(DateTime fecha) {
     _hora = TimeOfDay(hour: fecha.hour, minute: fecha.minute);
@@ -88,9 +88,9 @@ class ListaRutinas {
       _rutinas = List<Rutina>.from(data['tasks'].map((x) => Rutina(
           id: x['id'],
           nombre: x['nombre'],
-          hora: TimeOfDay(
+          /* hora: TimeOfDay(
               hour: DateTime.parse(x['hora']).hour,
-              minute: DateTime.parse(x['hora']).minute),
+              minute: DateTime.parse(x['hora']).minute),*/
           completada: x['completada'] == true ? true : false)));
     } catch (e) {
       print('Error al cargar datos: $e');
@@ -104,24 +104,23 @@ class ListaRutinas {
       'tasks': List<dynamic>.from(_rutinas.map((x) => {
             'id': x.id,
             'nombre': x.nombre,
-            'hora': x.getHoraAsDateTime().toIso8601String(),
+            //'hora': x.getHoraAsDateTime().toIso8601String(),
             'completada': x.completada,
           })),
     }));
   }
 
-  void agregarRutina(
-      String uuid, String nombre, TimeOfDay hora, bool completada) {
+  void agregarRutina(String uuid, String nombre, bool completada) {
     try {
       Rutina rutinaExistente = _rutinas.firstWhere((tarea) => tarea.id == uuid);
       rutinaExistente.nombre = nombre;
-      rutinaExistente.hora = hora;
+      //rutinaExistente.hora = hora;
       rutinaExistente.completada = completada;
     } catch (e) {
       _rutinas.add(Rutina(
         id: uuid,
         nombre: nombre,
-        hora: hora,
+        //hora: hora,
         completada: completada,
       ));
     }

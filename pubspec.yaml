@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 0.2.1
 
 environment:
   sdk: '>=3.0.6 <4.0.0'
@@ -53,9 +53,7 @@ dependencies:
   table_calendar: ^3.0.9
   contacts_service: ^0.6.3
   url_launcher: ^6.0.17
-  dynamic_timeline: ^0.1.2
-  gantt_chart: ^0.3.0
-
+  flutter_launcher_icons: "^0.13.1"
 
 
 dev_dependencies:
@@ -74,6 +72,9 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  assets:
+    - assets/images/
+    - assets/icon/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -114,3 +115,23 @@ flutter:
     - family: Segment7
       fonts:
         - asset: fonts/Segment7Standard.otf
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios:
+    generate: true
+    remove_alpha_ios: true
+  image_path: "assets/icon/icon.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  web:
+    generate: true
+    image_path: "assets/icon/icon.png"
+    background_color: "#hexcode"
+    theme_color: "#hexcode"
+  windows:
+    generate: true
+    image_path: "assets/icon/icon.png"
+    icon_size: 48 # min:48, max:256, default: 48
+  macos:
+    generate: true
+    image_path: "assets/icon/icon.png"
