@@ -101,9 +101,7 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
   Future<void> startRecording() async {
     try {
       if (await audioRecord.hasPermission()) {
-        await audioRecord.start(
-          bitRate: 128000, // by default
-        );
+        await audioRecord.start();
         setState(() {
           isRecording = true;
         });

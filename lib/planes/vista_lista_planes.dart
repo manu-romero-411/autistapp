@@ -75,14 +75,15 @@ class _VistaListaPlanesState extends State<VistaListaPlanes> {
   }
 
   void guardarSalir() {
-    widget._listaPlanes.name = _descController.text;
-    widget._meta.agregarTarea(widget._listaPlanes.id, _descController.text);
-    widget._onChangeNombre();
-    setState(() {});
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Cambios guardados')),
-    );
+    setState(() {
+      widget._listaPlanes.name = _descController.text;
+      widget._meta.agregarTarea(widget._listaPlanes.id, _descController.text);
+      widget._onChangeNombre();
+    });
+    //Navigator.pop(context);
+    //ScaffoldMessenger.of(context).showSnackBar(
+    //  const SnackBar(content: Text('Cambios guardados')),
+    //);
   }
 
   @override
@@ -104,11 +105,6 @@ class _VistaListaPlanesState extends State<VistaListaPlanes> {
                 isSearch = !isSearch;
               });
             },
-          ),
-          IconButton(
-            color: widget._ajustes.fgColor,
-            icon: const Icon(Icons.save),
-            onPressed: guardarSalir,
           ),
         ],
       ),
@@ -135,6 +131,11 @@ class _VistaListaPlanesState extends State<VistaListaPlanes> {
                 Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: TextField(
+                      onChanged: (string) {
+                        setState(() {
+                          guardarSalir();
+                        });
+                      },
                       controller: _descController,
                       maxLength: 100,
                       decoration: InputDecoration(

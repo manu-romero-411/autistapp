@@ -24,7 +24,7 @@ class _VistaAboutState extends State<VistaAbout> {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Center(
-          child: Column(children: [
+          child: Column(children: <Widget>[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: LayoutBuilder(
@@ -40,43 +40,32 @@ class _VistaAboutState extends State<VistaAbout> {
                 },
               ),
             ),
-            RichText(
+            const Text(
+              "AutistApp",
               textAlign: TextAlign.center,
-              text: TextSpan(
-                style: const TextStyle(
-                  fontWeight: FontWeight.normal,
-                  fontSize: 18,
-                  color: Colors.white,
-                  height: 1.5,
-                ),
-                children: <TextSpan>[
-                  TextSpan(
-                    text: 'AutistApp\n',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: widget.ajustes.fgColor,
-                    ),
-                  ),
-                  TextSpan(
-                      style: TextStyle(
-                        color: widget.ajustes.fgColor,
-                      ),
-                      text:
-                          "Prototipo de asistente personal para personas con TEA\n\n"),
-                  TextSpan(
-                    text: "Trabajo de final de grado EPSJ 2022-xxxx",
-                    style: TextStyle(
-                      color: widget.ajustes.fgColor,
-                    ),
-                  ),
-                ],
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
               ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                ),
+                "Prototipo de asistente personal para personas con TEA\n\n"),
+            const Text(
+              textAlign: TextAlign.center,
+              "Trabajo de final de grado EPSJ 2022-xxxx",
+              style: TextStyle(),
             ),
             const SizedBox(height: 24),
             const Text(
+                textAlign: TextAlign.center,
                 "Autor: Manuel Jesús Romero Mateos - mjrm0035@red.ujaen.es"),
             const Text(
+                textAlign: TextAlign.center,
                 "Colabora: Aurora Cobo - psicóloga de HorizonTEAsperger Jaén"),
           ]),
         ),

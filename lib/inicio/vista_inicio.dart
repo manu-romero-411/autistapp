@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:autistapp/apuntes/audio/lista_notas_voz.dart';
 import 'package:autistapp/apuntes/audio/vista_grabador_audio.dart';
 import 'package:autistapp/apuntes/texto/vista_editor_texto.dart';
-import 'package:autistapp/autoayuda/VistaAyuda.dart';
+import 'package:autistapp/autoayuda/vista_auto_ayuda.dart';
 import 'package:autistapp/inicio/ajustes.dart';
 import 'package:autistapp/inicio/vista_ajustes.dart';
 import 'package:autistapp/inicio/menu_lateral.dart';
@@ -604,11 +604,7 @@ class _VistaInicioState extends State<VistaInicio> {
                   ),
                 )
                     .then((_) {
-                  listaTareas.cargarDatos().then((_) {
-                    setState(() {
-                      busqueda = listaTareas.toList();
-                    });
-                  });
+                  setState(() {});
                 });
               },
             ),
