@@ -51,22 +51,24 @@ class ListaTareas {
   }
 
   Future<void> cargarDatos() async {
-    try {
-      final file = await _localFile;
+    final file = await _localFile;
+    if (await file.exists()) {
       final contents = await file.readAsString();
       final data = jsonDecode(contents);
       _tareas = List<Tarea>.from(data['tasks'].map((x) => Tarea(
-          id: x['id'],
-          nombre: x['nombre'],
-          fechaInicio: DateTime.parse(x['fechaInicio']),
-          fechaFin: DateTime.parse(x['fechaFin']),
-          tipo: x['tipo'],
-          prioridad: x['prioridad'],
-          repite: x['repite'] == true ? true : false,
-          intervalo: x['intervalo'],
-          unidad: x['unidad'],
-          completada: x['completada'] == true ? true : false)));
-    } catch (e) {}
+            id: x['id'],
+            nombre: x['nombre'],
+            fechaInicio: DateTime.parse(x['fechaInicio']),
+            fechaFin: DateTime.parse(x['fechaFin']),
+            tipo: x['tipo'],
+            prioridad: x['prioridad'],
+            repite: x['repite'] == true ? true : false,
+            intervalo: x['intervalo'],
+            unidad: x['unidad'],
+            completada: x['completada'] == true ? true : false,
+            notifId: x['notifId'],
+          )));
+    }
   }
 
   Future<File> guardarDatos() async {
@@ -83,12 +85,22 @@ class ListaTareas {
             'intervalo': x.intervalo,
             'unidad': x.unidad,
             'completada': x.completada,
+            'notifId': x.notifId,
           })),
     }));
   }
 
-  void agregarTarea(String uuid, String nombre, DateTime fechaFin, int tipo,
-      int prioridad, bool repite, int intervalo, int unidad, bool completada) {
+  void agregarTarea(
+      String uuid,
+      int id,
+      String nombre,
+      DateTime fechaFin,
+      int tipo,
+      int prioridad,
+      bool repite,
+      int intervalo,
+      int unidad,
+      bool completada) {
     try {
       Tarea tareaExistente = _tareas.firstWhere((tarea) => tarea.id == uuid);
       tareaExistente.nombre = nombre;
@@ -99,6 +111,7 @@ class ListaTareas {
       tareaExistente.intervalo = intervalo;
       tareaExistente.unidad = unidad;
       tareaExistente.completada = completada;
+      tareaExistente.notifId = id;
     } catch (e) {
       _tareas.add(Tarea(
         id: uuid,
@@ -111,6 +124,7 @@ class ListaTareas {
         intervalo: intervalo,
         unidad: unidad,
         completada: completada,
+        notifId: id,
       ));
     }
     guardarDatos();

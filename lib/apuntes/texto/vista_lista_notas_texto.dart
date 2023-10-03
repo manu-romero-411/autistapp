@@ -13,10 +13,10 @@ class VistaNotasTexto extends StatefulWidget {
       : _ajustes = ajustes;
 
   @override
-  _VistaNotasTextoState createState() => _VistaNotasTextoState();
+  VistaNotasTextoState createState() => VistaNotasTextoState();
 }
 
-class _VistaNotasTextoState extends State<VistaNotasTexto> {
+class VistaNotasTextoState extends State<VistaNotasTexto> {
   final listaNotasTexto = ListaNotasTexto();
   List<NotaTexto> busqueda = [];
   bool isSearch = false;
@@ -45,12 +45,15 @@ class _VistaNotasTextoState extends State<VistaNotasTexto> {
   }
 
   bool _operadorBusqueda(NotaTexto nota, String valor) {
-    if (valor == "") return true;
-    if (removeDiacritics(nota.titulo.toLowerCase()).contains(valor))
-      return true;
+    if (valor.isEmpty) return true;
+    if (removeDiacritics(nota.titulo.toLowerCase())
+        .contains(removeDiacritics(valor.toLowerCase()))) return true;
     //if (nota.texto.toLowerCase().contains(valor)) return true;
-    if ((DateFormat('yyyy-MM-dd', "es_ES").format(nota.fecha).contains(valor)))
+    if ((DateFormat('yyyy-MM-dd', "es_ES")
+        .format(nota.fecha)
+        .contains(valor))) {
       return true;
+    }
     if (valor.toLowerCase().contains("acad") ||
         valor.toLowerCase().contains("laboral")) {
       if (nota.ambito == 0) return true;

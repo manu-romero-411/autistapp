@@ -1,34 +1,32 @@
 import 'package:autistapp/apuntes/audio/vista_lista_notas_voz.dart';
 import 'package:autistapp/apuntes/texto/vista_lista_notas_texto.dart';
-import 'package:autistapp/autoayuda/contactos/VistaContactos.dart';
 import 'package:autistapp/inicio/vista_about.dart';
 import 'package:autistapp/inicio/ajustes.dart';
-import 'package:autistapp/inicio/vista_ayuda.dart';
-import 'package:autistapp/planes/lista_planes.dart';
 import 'package:autistapp/planes/vista_meta_lista_planes.dart';
-import 'package:autistapp/tareas/vida_diaria/vista_dias.dart';
+import 'package:autistapp/calendario/vista_dias.dart';
+import 'package:autistapp/ruleta/vista_lista_ruletas.dart';
 import 'package:flutter/material.dart';
 
 class MenuLateral extends StatefulWidget {
-  final Ajustes ajustes;
+  final Ajustes _ajustes;
 
   const MenuLateral(
-      {Key? key, required this.onThemeChanged, required this.ajustes})
-      : super(key: key);
-  final ValueChanged<String> onThemeChanged;
+      {Key? key, required this.onThemeChanged, required Ajustes ajustes})
+      : _ajustes = ajustes,
+        super(key: key);
+  final ValueChanged<bool> onThemeChanged;
 
   @override
-  _MenuLateralState createState() => _MenuLateralState();
+  MenuLateralState createState() => MenuLateralState();
 }
 
-class _MenuLateralState extends State<MenuLateral> {
-  bool notificationsEnabled = false;
-  bool isDark = false;
+class MenuLateralState extends State<MenuLateral> {
+  bool _isDark = false;
 
   @override
   void initState() {
     super.initState();
-    widget.ajustes.theme == "light" ? isDark = false : isDark = true;
+    _isDark = widget._ajustes.isDarkTheme;
   }
 
   @override
@@ -65,7 +63,21 @@ class _MenuLateralState extends State<MenuLateral> {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => VistaCalendario(ajustes: widget.ajustes)),
+                builder: (context) =>
+                    VistaCalendario(ajustes: widget._ajustes)),
+          );
+        },
+      ),
+      ListTile(
+        leading: const Icon(Icons.casino),
+        dense: true,
+        title: const Text('Ruleta de decisiones'),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    VistaListaRuletas(ajustes: widget._ajustes)),
           );
         },
       ),
@@ -78,7 +90,7 @@ class _MenuLateralState extends State<MenuLateral> {
             context,
             MaterialPageRoute(
                 builder: (context) =>
-                    VistaListaNotasVoz(ajustes: widget.ajustes)),
+                    VistaListaNotasVoz(ajustes: widget._ajustes)),
           );
         },
       ),
@@ -90,7 +102,8 @@ class _MenuLateralState extends State<MenuLateral> {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => VistaNotasTexto(ajustes: widget.ajustes)),
+                builder: (context) =>
+                    VistaNotasTexto(ajustes: widget._ajustes)),
           );
         },
       ),
@@ -99,12 +112,11 @@ class _MenuLateralState extends State<MenuLateral> {
         dense: true,
         title: const Text('Planificaciones de días'),
         onTap: () {
-          ListaPlanes test = ListaPlanes(id: "test", name: "test");
           Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (context) =>
-                    VistaMetaListaPlanes(ajustes: widget.ajustes)),
+                    VistaMetaListaPlanes(ajustes: widget._ajustes)),
           );
         },
       ),
@@ -112,26 +124,24 @@ class _MenuLateralState extends State<MenuLateral> {
         dense: true,
         onTap: () {
           setState(() {
-            isDark = !isDark;
-            String change = (isDark ? "dark" : 'light');
-            widget.onThemeChanged(change);
+            _isDark = !_isDark;
+            widget.onThemeChanged(_isDark);
           });
         },
         leading: const Icon(Icons.dark_mode_outlined),
         title: const Text('Tema oscuro'),
         trailing: Switch(
-          value: isDark,
+          value: _isDark,
+          activeColor: widget._ajustes.color,
           onChanged: (value) {
             setState(() {
-              String change = "";
-              isDark = value;
-              value ? change = 'dark' : change = 'light';
-              widget.onThemeChanged(change);
+              _isDark = value;
+              widget.onThemeChanged(value);
             });
           },
         ),
       ),
-      ListTile(
+      /*ListTile(
         dense: true,
         leading: const Icon(Icons.help),
         title: const Text('Cómo usar la app'),
@@ -139,10 +149,10 @@ class _MenuLateralState extends State<MenuLateral> {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => VistaAyudaApp(ajustes: widget.ajustes)),
+                builder: (context) => VistaAyudaApp(ajustes: widget._ajustes)),
           );
         },
-      ),
+      ),*/
       ListTile(
         dense: true,
         leading: const Icon(Icons.info),
@@ -151,7 +161,7 @@ class _MenuLateralState extends State<MenuLateral> {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => VistaAbout(ajustes: widget.ajustes)),
+                builder: (context) => VistaAbout(ajustes: widget._ajustes)),
           );
         },
       ),

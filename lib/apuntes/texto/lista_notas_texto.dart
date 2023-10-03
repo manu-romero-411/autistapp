@@ -39,7 +39,7 @@ class ListaNotasTexto {
             ambito: x['ambito'])));
       }
     } catch (e) {
-      print('Error al cargar datos: $e');
+      throw Exception('Error al cargar datos: $e');
     }
   }
 
@@ -66,7 +66,7 @@ class ListaNotasTexto {
         _notas = notasFec;
       }
     } catch (e) {
-      print('Error al cargar datos: $e');
+      throw Exception('Error al cargar datos: $e');
     }
   }
 
@@ -88,7 +88,7 @@ class ListaNotasTexto {
       String uuid, String titulo, String texto, int mood, int ambito) {
     try {
       NotaTexto notaExistente = _notas.firstWhere((nota) => nota.id == uuid);
-      titulo == ""
+      titulo.isEmpty
           ? notaExistente.titulo == "Nota sin título"
           : notaExistente.titulo = titulo;
       notaExistente.texto = texto;
@@ -97,7 +97,7 @@ class ListaNotasTexto {
     } catch (e) {
       _notas.add(NotaTexto(
         id: uuid,
-        titulo: titulo == "" ? "Nota sin título" : titulo,
+        titulo: titulo.isEmpty ? "Nota sin título" : titulo,
         fecha: DateTime.now(),
         texto: texto,
         mood: mood,

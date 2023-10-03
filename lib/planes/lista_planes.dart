@@ -32,8 +32,8 @@ class ListaPlanes {
   }
 
   Future<void> cargarDatos() async {
-    try {
-      final file = await _localFile;
+    final file = await _localFile;
+    if (await file.exists()) {
       final contents = await file.readAsString();
       final data = jsonDecode(contents);
       _planes = List<Plan>.from(data['plans'].map((x) => Plan(
@@ -45,8 +45,6 @@ class ListaPlanes {
           minFin: x['minFin'],
           tipo: x['tipo'])));
       //ordenarLista();
-    } catch (e) {
-      print('Error al cargar datos: $e');
     }
   }
 

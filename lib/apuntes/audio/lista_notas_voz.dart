@@ -25,46 +25,39 @@ class ListaNotasVoz {
   }
 
   Future<void> cargarDatos() async {
-    try {
-      final file = await _localFile;
-      if (await file.exists()) {
-        final contents = await file.readAsString();
-        final data = jsonDecode(contents);
-        _notas = List<NotaVoz>.from(data['voiceNotes'].map((x) => NotaVoz(
-            id: x['id'],
-            audioFileName: x['audioFileName'],
-            fecha: DateTime.parse(x['fecha']),
-            descripcion: x['descripcion'],
-            mood: x['mood'],
-            ambito: x['ambito'])));
-      }
-    } catch (e) {
-      print('Error al cargar datos: $e');
+    final file = await _localFile;
+    if (await file.exists()) {
+      final contents = await file.readAsString();
+      final data = jsonDecode(contents);
+      _notas = List<NotaVoz>.from(data['voiceNotes'].map((x) => NotaVoz(
+          id: x['id'],
+          audioFileName: x['audioFileName'],
+          fecha: DateTime.parse(x['fecha']),
+          descripcion: x['descripcion'],
+          mood: x['mood'],
+          ambito: x['ambito'])));
     }
   }
 
   Future<void> cargarDatosPorFecha(String fecha) async {
-    try {
-      final file = await _localFile;
-      if (await file.exists()) {
-        final contents = await file.readAsString();
-        final data = jsonDecode(contents);
-        List<NotaVoz> notasFec = List<NotaVoz>.from(data['voiceNotes']
-            .where((x) => (DateFormat("yyyy-MM-dd")
-                .format(DateTime.parse(x['fecha']))
-                .contains(fecha)))
-            .map((x) => NotaVoz(
-                id: x['id'],
-                audioFileName: x['audioFileName'],
-                fecha: DateTime.parse(x['fecha']),
-                descripcion: x['descripcion'],
-                mood: x['mood'],
-                ambito: x['ambito'])));
-        _notas = notasFec;
-      }
-    } catch (e) {
-      print('Error al cargar datos: $e');
+    final file = await _localFile;
+    if (await file.exists()) {
+      final contents = await file.readAsString();
+      final data = jsonDecode(contents);
+      List<NotaVoz> notasFec = List<NotaVoz>.from(data['voiceNotes']
+          .where((x) => (DateFormat("yyyy-MM-dd")
+              .format(DateTime.parse(x['fecha']))
+              .contains(fecha)))
+          .map((x) => NotaVoz(
+              id: x['id'],
+              audioFileName: x['audioFileName'],
+              fecha: DateTime.parse(x['fecha']),
+              descripcion: x['descripcion'],
+              mood: x['mood'],
+              ambito: x['ambito'])));
+      _notas = notasFec;
     }
+
     //return notasFec;
   }
 

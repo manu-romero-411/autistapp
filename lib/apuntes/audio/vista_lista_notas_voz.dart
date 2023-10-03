@@ -8,13 +8,14 @@ import 'package:intl/intl.dart';
 
 class VistaListaNotasVoz extends StatefulWidget {
   final Ajustes _ajustes;
-  const VistaListaNotasVoz({required Ajustes ajustes}) : _ajustes = ajustes;
+  const VistaListaNotasVoz({super.key, required Ajustes ajustes})
+      : _ajustes = ajustes;
 
   @override
-  _VistaListaNotasVozState createState() => _VistaListaNotasVozState();
+  VistaListaNotasVozState createState() => VistaListaNotasVozState();
 }
 
-class _VistaListaNotasVozState extends State<VistaListaNotasVoz> {
+class VistaListaNotasVozState extends State<VistaListaNotasVoz> {
   final listaNotasVoz = ListaNotasVoz();
   List<NotaVoz> busqueda = [];
   bool isSearch = false;
@@ -43,10 +44,8 @@ class _VistaListaNotasVozState extends State<VistaListaNotasVoz> {
   }
 
   bool _operadorBusqueda(NotaVoz nota, String valor) {
-    if (removeDiacritics(nota.descripcion.toLowerCase()).contains(valor)) {
-      return true;
-    }
-    //if (nota.texto.toLowerCase().contains(valor)) return true;
+    if (removeDiacritics(nota.descripcion.toLowerCase())
+        .contains(removeDiacritics(valor.toLowerCase()))) return true;
     if ((DateFormat('yyyy-MM-dd', "es_ES")
         .format(nota.fecha)
         .contains(valor))) {

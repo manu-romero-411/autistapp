@@ -1,9 +1,12 @@
+// ignore_for_file: must_be_immutable
+
 import 'package:autistapp/inicio/ajustes.dart';
 import 'package:flutter/material.dart';
 
 class WidgetsEditores extends StatefulWidget {
   WidgetsEditores(
-      {required ajustes,
+      {super.key,
+      required ajustes,
       required this.ambito,
       required this.mood,
       required this.descController,
@@ -11,19 +14,19 @@ class WidgetsEditores extends StatefulWidget {
       required this.cambiarMood,
       required this.cambiarTitulo})
       : _ajustes = ajustes;
-  Ajustes _ajustes;
+  final Ajustes _ajustes;
   int ambito;
   int mood;
-  TextEditingController descController;
+  final TextEditingController descController;
   Function(int) cambiarAmbito;
   Function(int) cambiarMood;
   Function(String) cambiarTitulo;
 
   @override
-  _WidgetsEditoresState createState() => _WidgetsEditoresState();
+  WidgetsEditoresState createState() => WidgetsEditoresState();
 }
 
-class _WidgetsEditoresState extends State<WidgetsEditores> {
+class WidgetsEditoresState extends State<WidgetsEditores> {
   @override
   void initState() {
     super.initState();

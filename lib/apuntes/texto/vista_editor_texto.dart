@@ -11,13 +11,12 @@ class EditorNotas extends StatefulWidget {
   final NotaTexto? nota;
   final Ajustes ajustes;
   const EditorNotas({super.key, this.nota, required this.ajustes});
-  @override
-  _EditorNotasState createState() => _EditorNotasState();
 
-  // ...
+  @override
+  EditorNotasState createState() => EditorNotasState();
 }
 
-class _EditorNotasState extends State<EditorNotas> {
+class EditorNotasState extends State<EditorNotas> {
   final listaNotasTexto = ListaNotasTexto();
 
   late TextEditingController _descController;
@@ -79,19 +78,6 @@ class _EditorNotasState extends State<EditorNotas> {
     setState(() {
       titulo = tit;
     });
-  }
-
-  String getTextoAmbito(int ambito) {
-    switch (ambito) {
-      case 0:
-        return 'Académico/Laboral';
-      case 1:
-        return 'Social';
-      case 2:
-        return 'Personal';
-      default:
-        return 'Otro';
-    }
   }
 
   @override

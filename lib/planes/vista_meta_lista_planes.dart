@@ -10,14 +10,14 @@ import 'package:uuid/uuid.dart';
 class VistaMetaListaPlanes extends StatefulWidget {
   final Ajustes _ajustes;
 
-  VistaMetaListaPlanes({super.key, required Ajustes ajustes})
+  const VistaMetaListaPlanes({super.key, required Ajustes ajustes})
       : _ajustes = ajustes;
 
   @override
-  _VistaMetaListaPlanesState createState() => _VistaMetaListaPlanesState();
+  VistaMetaListaPlanesState createState() => VistaMetaListaPlanesState();
 }
 
-class _VistaMetaListaPlanesState extends State<VistaMetaListaPlanes> {
+class VistaMetaListaPlanesState extends State<VistaMetaListaPlanes> {
   MetaListaPlanes? metaListaPlanes;
 
   List<ListaPlanes> busqueda = [];
@@ -41,16 +41,17 @@ class _VistaMetaListaPlanesState extends State<VistaMetaListaPlanes> {
       } else {
         busqueda = metaListaPlanes!
             .toList()
-            .where((nota) => _operadorBusqueda(nota, removeDiacritics(valor)))
+            .where((planlist) =>
+                _operadorBusqueda(planlist, removeDiacritics(valor)))
             .toList();
       }
     });
   }
 
-  bool _operadorBusqueda(ListaPlanes nota, String valor) {
-    if (valor == "") return true;
-    if (removeDiacritics(nota.name.toLowerCase()).contains(valor)) return true;
-    //if (nota.texto.toLowerCase().contains(valor)) return true;
+  bool _operadorBusqueda(ListaPlanes planlist, String valor) {
+    if (valor.isEmpty) return true;
+    if (removeDiacritics(planlist.name.toLowerCase())
+        .contains(removeDiacritics(valor.toLowerCase()))) return true;
 
     return false;
   }
@@ -103,7 +104,7 @@ class _VistaMetaListaPlanesState extends State<VistaMetaListaPlanes> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16.0),
                             ),
-                            labelText: "Busca notas...",
+                            labelText: "Busca planificaciones...",
                             suffixIcon: const Icon(Icons.search)),
                       )),
                 const SizedBox(
@@ -116,18 +117,18 @@ class _VistaMetaListaPlanesState extends State<VistaMetaListaPlanes> {
                     itemCount: busqueda.length,
                     itemBuilder: (context, index) {
                       final reversedIndex = busqueda.length - 1 - index;
-                      final nota = busqueda[reversedIndex];
+                      final planlist = busqueda[reversedIndex];
                       return ListTile(
-                        leading: Icon(Icons.list_alt_rounded),
-                        title: Text(nota.name),
+                        leading: const Icon(Icons.list_alt_rounded),
+                        title: Text(planlist.name),
                         onTap: () {
                           Navigator.of(context)
                               .push(
                             MaterialPageRoute(
                               builder: (context) => VistaDiagramaTareas(
-                                  nombre: nota.name,
+                                  nombre: planlist.name,
                                   meta: metaListaPlanes,
-                                  id: nota.id,
+                                  id: planlist.id,
                                   ajustes: widget._ajustes),
                             ),
                           )
@@ -152,7 +153,7 @@ class _VistaMetaListaPlanesState extends State<VistaMetaListaPlanes> {
         child: const Icon(Icons.add),
         onPressed: () {
           ListaPlanes newLista =
-              ListaPlanes(id: Uuid().v4(), name: "Nueva planificación");
+              ListaPlanes(id: const Uuid().v4(), name: "Nueva planificación");
           Navigator.of(context)
               .push(
             MaterialPageRoute(

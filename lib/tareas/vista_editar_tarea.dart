@@ -1,10 +1,15 @@
+import 'dart:math';
+
 import 'package:autistapp/inicio/ajustes.dart';
 import 'package:autistapp/tareas/lista_tareas.dart';
 import 'package:autistapp/tareas/tarea.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 class EditorTareas extends StatefulWidget {
   final Tarea? _tarea;
@@ -13,7 +18,8 @@ class EditorTareas extends StatefulWidget {
   final Function() _onUpdateTareas;
 
   const EditorTareas(
-      {Tarea? tarea,
+      {super.key,
+      Tarea? tarea,
       required Ajustes ajustes,
       required listaTareas,
       required onUpdateTareas})
@@ -22,30 +28,26 @@ class EditorTareas extends StatefulWidget {
         _listaTareas = listaTareas,
         _onUpdateTareas = onUpdateTareas;
   @override
-  _EditorTareasState createState() => _EditorTareasState();
-
-  // ...
+  EditorTareasState createState() => EditorTareasState();
 }
 
-class _EditorTareasState extends State<EditorTareas> {
+class EditorTareasState extends State<EditorTareas> {
   late TextEditingController _nombreController;
-  late TextEditingController _intervaloController;
 
   late String _id;
+  late int _notifId;
   late DateTime _fechaInicio;
   late DateTime? _fechaFin;
   //late DateTime? _fechaLimite;
   late int _tipo;
+  late int _notifIntervalo;
   late int _prioridad;
-  late bool _repite;
-  late int _unidad;
   late bool _completada;
 
   @override
   void initState() {
+    super.initState();
     _nombreController = TextEditingController(text: widget._tarea?.nombre);
-    _intervaloController =
-        TextEditingController(text: widget._tarea?.intervalo.toString());
 
     if (widget._tarea != null) {
       _id = widget._tarea?.id;
@@ -54,10 +56,9 @@ class _EditorTareasState extends State<EditorTareas> {
       _fechaFin = widget._tarea?.fechaFin;
       _tipo = widget._tarea?.tipo;
       _prioridad = widget._tarea?.prioridad;
-      _repite = widget._tarea?.repite;
-      _intervaloController.text = widget._tarea!.intervalo.toString();
-      _unidad = widget._tarea?.unidad;
+      _notifIntervalo = widget._tarea!.intervalo;
       _completada = widget._tarea?.completada;
+      _notifId = widget._tarea?.notifId;
     } else {
       _id = const Uuid().v4();
       _nombreController.text = "Nueva tarea";
@@ -66,16 +67,72 @@ class _EditorTareasState extends State<EditorTareas> {
       //_fechaLimite = DateTime(DateTime.now().year + 99);
       _tipo = 0;
       _prioridad = 1;
-      _repite = false;
-      _intervaloController.text = "1";
-      _unidad = 0;
+      _notifIntervalo = 0;
       _completada = false;
+      Random rng = Random();
+      _notifId = rng.nextInt(pow(2, 31).toInt());
     }
 
     widget._listaTareas.cargarDatos().then((_) {
       setState(() {});
     });
-    super.initState();
+  }
+
+  void _enviarNotif() async {
+    // Eliminamos la notificación anterior
+    widget._ajustes.flutNotif.cancel(_notifId);
+
+    // Configuramos los detalles de la notificación.
+    var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
+        'autistapp_chan2', 'Tareas',
+        importance: Importance.max, priority: Priority.high, showWhen: false);
+    var iOSPlatformChannelSpecifics = const DarwinNotificationDetails();
+
+    var platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+        iOS: iOSPlatformChannelSpecifics);
+
+    // Determinamos el intervalo de tiempo basado en el int proporcionado.
+    Duration duration;
+    switch (_notifIntervalo) {
+      case 0:
+        duration = const Duration(minutes: 30);
+        break;
+      case 1:
+        duration = const Duration(hours: 1);
+        break;
+      case 2:
+        duration = const Duration(hours: 3);
+        break;
+      case 3:
+        duration = const Duration(hours: 6);
+        break;
+      case 4:
+        duration = const Duration(days: 1);
+        break;
+      case 5:
+        duration = const Duration(days: 3);
+        break;
+      case 6:
+        duration = const Duration(days: 7);
+        break;
+      default:
+        throw ArgumentError('Intervalo no válido: $_notifIntervalo');
+    }
+
+// Calculamos la fecha y hora en que se debe mostrar la notificación.
+    var scheduledDate = tz.TZDateTime.now(tz.local).add(duration);
+
+    // Mostramos la notificación.
+    await widget._ajustes.flutNotif.zonedSchedule(
+        0,
+        '¡Tienes tareas!',
+        "${widget._ajustes.prioridadesEmoji[_prioridad]} ${_nombreController.text} (${widget._ajustes.listaAmbitos[_tipo].ambito})",
+        scheduledDate,
+        platformChannelSpecifics,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime);
   }
 
   @override
@@ -92,6 +149,7 @@ class _EditorTareasState extends State<EditorTareas> {
               color: widget._ajustes.fgColor,
               icon: const Icon(Icons.delete),
               onPressed: () {
+                widget._ajustes.flutNotif.cancel(widget._tarea?.id);
                 widget._listaTareas.eliminarTarea(widget._tarea?.id);
                 Navigator.of(context).pop();
               },
@@ -109,16 +167,20 @@ class _EditorTareasState extends State<EditorTareas> {
             color: widget._ajustes.fgColor,
             icon: const Icon(Icons.save),
             onPressed: () {
+              widget._onUpdateTareas;
               widget._listaTareas.agregarTarea(
-                  _id,
-                  _nombreController.text,
-                  _fechaFin!,
-                  _tipo,
-                  _prioridad,
-                  _repite,
-                  int.parse(_intervaloController.text),
-                  _unidad,
-                  _completada);
+                _id,
+                _notifId,
+                _nombreController.text,
+                _fechaFin!,
+                _tipo,
+                _prioridad,
+                true,
+                _notifIntervalo,
+                0,
+                _completada,
+              );
+              _enviarNotif();
               Navigator.pop(context);
             },
           ),
@@ -206,6 +268,56 @@ class _EditorTareasState extends State<EditorTareas> {
                   ]),
               ],
             ),
+            const SizedBox(
+              height: 20,
+            ),
+            Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  const Text('Recordar dentro de  '),
+                  DropdownButton<int>(
+                    value: _notifIntervalo,
+                    onChanged: (int? newValue) {
+                      setState(() {
+                        _notifIntervalo = newValue!;
+                      });
+                    },
+                    items: const <DropdownMenuItem<int>>[
+                      DropdownMenuItem<int>(
+                        value: 0,
+                        child: Text('Media hora'),
+                      ),
+                      DropdownMenuItem<int>(
+                        value: 1,
+                        child: Text('1 hora'),
+                      ),
+                      DropdownMenuItem<int>(
+                        value: 2,
+                        child: Text('3 horas'),
+                      ),
+                      DropdownMenuItem<int>(
+                        value: 3,
+                        child: Text('6 horas'),
+                      ),
+                      DropdownMenuItem<int>(
+                        value: 4,
+                        child: Text('1 día'),
+                      ),
+                      DropdownMenuItem<int>(
+                        value: 5,
+                        child: Text('3 días'),
+                      ),
+                      DropdownMenuItem<int>(
+                        value: 6,
+                        child: Text('1 semana'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
             /*
             SwitchListTile(
               title: const Text('Repetir periódicamente'),
@@ -247,23 +359,6 @@ class _EditorTareasState extends State<EditorTareas> {
               ),*/
             const SizedBox(
               height: 24,
-            ),
-            const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Center(
-                      child: Text(
-                        textAlign: TextAlign.center,
-                        "Puedes establecer el ámbito y la prioridad de cada tarea para ayudarte a organizarlas mejor.\n\nLa aplicación te notificará periódicamente para que entres a ver qué tareas y rutinas tienes pendientes. Haz primero las más laboriosas/importantes y después harás con más ánimo las demás.",
-                        style: TextStyle(fontSize: 14),
-                      ),
-                    ),
-                  ],
-                )),
-            const SizedBox(
-              height: 16,
             ),
           ],
         ),

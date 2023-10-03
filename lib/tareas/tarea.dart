@@ -1,5 +1,6 @@
 class Tarea {
   String _id;
+  int _notifId;
   String _nombre;
   DateTime _fechaInicio;
   DateTime? _fechaFin = DateTime(DateTime.now().year + 99);
@@ -11,47 +12,41 @@ class Tarea {
   bool _completada;
 
   get id => _id;
-
   set id(final value) => _id = value;
 
-  get nombre => _nombre;
+  get notifId => _notifId;
+  set notifId(value) => _notifId = value;
 
+  get nombre => _nombre;
   set nombre(value) => _nombre = value;
 
   get fechaInicio => _fechaInicio;
-
   set fechaInicio(value) => _fechaInicio = value;
 
   get fechaFin => _fechaFin;
-
   set fechaFin(value) => _fechaFin = value;
 
   get tipo => _tipo;
-
   set tipo(value) => _tipo = value;
 
   get prioridad => _prioridad;
-
   set prioridad(value) => _prioridad = value;
 
   get repite => _repite;
-
   set repite(value) => _repite = value;
 
   get intervalo => _intervalo;
-
   set intervalo(value) => _intervalo = value;
 
   get unidad => _unidad;
-
   set unidad(value) => _unidad = value;
 
   get completada => _completada;
-
   set completada(value) => _completada = value;
 
   Tarea({
     required String id,
+    required int notifId,
     required String nombre,
     required DateTime fechaInicio,
     required DateTime? fechaFin,
@@ -70,6 +65,7 @@ class Tarea {
         _fechaFin = fechaFin,
         _fechaInicio = fechaInicio,
         _nombre = nombre,
+        _notifId = notifId,
         _id = id {
     if (_nombre.length > 100) {
       _nombre = _nombre.substring(0, 100);

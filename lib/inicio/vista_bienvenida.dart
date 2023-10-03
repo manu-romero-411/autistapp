@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 class PantallaBienvenida extends StatefulWidget {
   final Ajustes ajustes;
   final Function(Color) onColorSelected;
-  final ValueChanged<String> onThemeChanged;
+  final ValueChanged<bool> onThemeChanged;
 
   const PantallaBienvenida(
       {super.key,
@@ -15,10 +15,10 @@ class PantallaBienvenida extends StatefulWidget {
       required this.onThemeChanged});
 
   @override
-  _PantallaBienvenidaState createState() => _PantallaBienvenidaState();
+  PantallaBienvenidaState createState() => PantallaBienvenidaState();
 }
 
-class _PantallaBienvenidaState extends State<PantallaBienvenida> {
+class PantallaBienvenidaState extends State<PantallaBienvenida> {
   int _currentPage = 0;
   final PageController _pageController = PageController();
   final List<Color> _rainbowColors = [
@@ -40,7 +40,7 @@ class _PantallaBienvenidaState extends State<PantallaBienvenida> {
     super.initState();
     widget.ajustes.cargarDatos().then((_) {
       setState(() {
-        widget.onThemeChanged(widget.ajustes.theme);
+        widget.onThemeChanged(widget.ajustes.isDarkTheme);
       });
     });
     _pages = [
@@ -48,7 +48,7 @@ class _PantallaBienvenidaState extends State<PantallaBienvenida> {
         imagePath: "assets/images/infinity_loop_white.png",
         title: "¡Hola!",
         content:
-            "autistApp es una aplicación que para ayudar a las personas autistas (TEA) con su día a día, gestión de tiempos y tareas, toma de apuntes para un buen registro de las situaciones personales, auxilio ante adversidades, etc. Su finalidad es complementar las terapias psicológicas con profesionales.",
+            "AutistApp es una aplicación que para ayudar a las personas autistas (TEA) con su día a día, gestión de tiempos y tareas, toma de apuntes para un buen registro de las situaciones personales, auxilio ante adversidades, etc. Su finalidad es complementar las terapias psicológicas con profesionales.",
       ),
       ColorPage(
         ajustes: widget.ajustes,
@@ -58,7 +58,8 @@ class _PantallaBienvenidaState extends State<PantallaBienvenida> {
       const WelcomePage(
         imagePath: "assets/images/check.png",
         title: "¡Todo en marcha!",
-        content: "aaa",
+        content:
+            "Explora la aplicación y todas sus funciones. Son fáciles de usar y de adaptar a tus circunstancias personales.",
       ),
     ];
 
@@ -186,7 +187,7 @@ class WelcomePage extends StatelessWidget {
 class ColorPage extends StatefulWidget {
   final Ajustes ajustes;
   final Function(Color) onColorSelected;
-  final ValueChanged<String> onThemeChanged;
+  final ValueChanged<bool> onThemeChanged;
 
   const ColorPage(
       {super.key,
@@ -195,10 +196,10 @@ class ColorPage extends StatefulWidget {
       required this.onThemeChanged});
 
   @override
-  _ColorPageState createState() => _ColorPageState();
+  ColorPageState createState() => ColorPageState();
 }
 
-class _ColorPageState extends State<ColorPage> {
+class ColorPageState extends State<ColorPage> {
   late TextEditingController _textController;
 
   @override
@@ -231,11 +232,18 @@ class _ColorPageState extends State<ColorPage> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: TextField(
               onTapOutside: (event) {
-                widget.ajustes.name = _textController.text;
+                setState(() {
+                  widget.ajustes.name = _textController.text;
+                });
+              },
+              onSubmitted: (event) {
+                setState(() {
+                  widget.ajustes.name = _textController.text;
+                });
               },
               controller: _textController,
-              maxLines: null,
-              keyboardType: TextInputType.multiline,
+              maxLines: 1,
+              keyboardType: TextInputType.name,
               decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16.0),

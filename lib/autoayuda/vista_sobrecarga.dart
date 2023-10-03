@@ -9,10 +9,10 @@ class VistaSobrecarga extends StatefulWidget {
         super(key: key);
 
   @override
-  _VistaSobrecargaState createState() => _VistaSobrecargaState();
+  VistaSobrecargaState createState() => VistaSobrecargaState();
 }
 
-class _VistaSobrecargaState extends State<VistaSobrecarga> {
+class VistaSobrecargaState extends State<VistaSobrecarga> {
   List<Widget> _pages = [];
   int _currentPage = 0;
   final PageController _pageController = PageController();

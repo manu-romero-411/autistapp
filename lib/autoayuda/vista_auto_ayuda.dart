@@ -9,10 +9,10 @@ class VistaAyuda extends StatefulWidget {
         super(key: key);
 
   @override
-  _VistaAyudaState createState() => _VistaAyudaState();
+  VistaAyudaState createState() => VistaAyudaState();
 }
 
-class _VistaAyudaState extends State<VistaAyuda> {
+class VistaAyudaState extends State<VistaAyuda> {
   void sobrecarga() {
     Navigator.of(context)
         .push(
@@ -78,9 +78,10 @@ class _VistaAyudaState extends State<VistaAyuda> {
 class BuildCard extends StatelessWidget {
   final String _title;
   final IconData _icon;
-  Function() _onPressed;
+  final Function() _onPressed;
 
-  BuildCard({required title, required icon, required onPressed})
+  const BuildCard(
+      {super.key, required title, required icon, required onPressed})
       : _title = title,
         _icon = icon,
         _onPressed = onPressed;

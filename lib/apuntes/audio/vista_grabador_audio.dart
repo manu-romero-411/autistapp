@@ -15,7 +15,8 @@ class GrabadorAudio extends StatefulWidget {
   final ListaNotasVoz _listaNotasVoz;
   final Function() _onUpdateLista;
   const GrabadorAudio(
-      {NotaVoz? nota,
+      {super.key,
+      NotaVoz? nota,
       required Ajustes ajustes,
       required ListaNotasVoz listaNotasVoz,
       required onUpdateLista})
@@ -24,12 +25,10 @@ class GrabadorAudio extends StatefulWidget {
         _listaNotasVoz = listaNotasVoz,
         _onUpdateLista = onUpdateLista;
   @override
-  _GrabadorAudioState createState() => _GrabadorAudioState();
-
-  // ...
+  GrabadorAudioState createState() => GrabadorAudioState();
 }
 
-class _GrabadorAudioState extends State<GrabadorAudio> {
+class GrabadorAudioState extends State<GrabadorAudio> {
   late Record audioRecord;
   late AudioPlayer audioPlayer;
   bool isRecording = false;
@@ -109,7 +108,7 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
         startTimer();
       }
     } catch (e) {
-      print("[ERROR] Error al iniciar grabación: $e");
+      throw Exception("[ERROR] Error al iniciar grabación: $e");
     }
   }
 
@@ -142,7 +141,7 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
       elapsedTime = Duration.zero;
 
       widget._listaNotasVoz.agregarNota(const Uuid().v4(), audioPath,
-          titulo == "" ? "Nota sin descripción" : titulo, _mood, _ambito);
+          titulo.isEmpty ? "Nota sin descripción" : titulo, _mood, _ambito);
       widget._onUpdateLista();
 
       if (!context.mounted) return;
@@ -152,7 +151,7 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
         const SnackBar(content: Text('La grabación ha sido creada con éxito')),
       );
     } catch (e) {
-      print("[ERROR] Error al parar grabación: $e");
+      throw Exception("[ERROR] Error al parar grabación: $e");
     }
   }
 
@@ -169,7 +168,7 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
         isPlaying = true;
       });
     } catch (e) {
-      print("[ERROR] Fallo al reproducir: $e");
+      throw Exception("[ERROR] Fallo al reproducir: $e");
     }
   }
 
@@ -182,7 +181,7 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
         isPlaying = false;
       });
     } catch (e) {
-      print("[ERROR] Fallo al pausar: $e");
+      throw Exception("[ERROR] Fallo al pausar: $e");
     }
   }
 
@@ -199,7 +198,7 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
         playStart = false;
       });
     } catch (e) {
-      print("[ERROR] Fallo al pausar: $e");
+      throw Exception("[ERROR] Fallo al pausar: $e");
     }
   }
 
@@ -212,7 +211,7 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
         isPlaying = true;
       });
     } catch (e) {
-      print("[ERROR] Fallo al reanudar: $e");
+      throw Exception("[ERROR] Fallo al reanudar: $e");
     }
   }
 
@@ -233,7 +232,8 @@ class _GrabadorAudioState extends State<GrabadorAudio> {
       resumePlay(); //}
       //});
     } catch (e) {
-      print("[ERROR] Fallo al cambiar la velocidad de reproducción: $e");
+      throw Exception(
+          "[ERROR] Fallo al cambiar la velocidad de reproducción: $e");
     }
   }
 

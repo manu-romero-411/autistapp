@@ -6,10 +6,10 @@ class VistaAbout extends StatefulWidget {
   const VistaAbout({Key? key, required this.ajustes}) : super(key: key);
 
   @override
-  _VistaAboutState createState() => _VistaAboutState();
+  VistaAboutState createState() => VistaAboutState();
 }
 
-class _VistaAboutState extends State<VistaAbout> {
+class VistaAboutState extends State<VistaAbout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,7 +57,7 @@ class _VistaAboutState extends State<VistaAbout> {
                 "Prototipo de asistente personal para personas con TEA\n\n"),
             const Text(
               textAlign: TextAlign.center,
-              "Trabajo de final de grado EPSJ 2022-xxxx",
+              "Trabajo de final de grado EPSJ 21/22-3770",
               style: TextStyle(),
             ),
             const SizedBox(height: 24),

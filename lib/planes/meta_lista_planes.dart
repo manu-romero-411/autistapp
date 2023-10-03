@@ -15,7 +15,7 @@ class MetaListaPlanes {
 
   Future<File> getListaFile(String uuid) async {
     final directory = await getApplicationDocumentsDirectory();
-    return File('${directory.path}/autistapp_plans_${uuid}.json');
+    return File('${directory.path}/autistapp_plans_$uuid.json');
   }
 
   List<ListaPlanes> toList() {
@@ -27,16 +27,14 @@ class MetaListaPlanes {
   }
 
   Future<void> cargarDatos() async {
-    try {
-      final file = await _localFile;
+    final file = await _localFile;
+    if (await file.exists()) {
       final contents = await file.readAsString();
       final data = jsonDecode(contents);
       _planes = List<ListaPlanes>.from(data['planList'].map((x) => ListaPlanes(
             id: x['id'],
             name: x['nombre'],
           )));
-    } catch (e) {
-      print('Error al cargar datos: $e');
     }
   }
 

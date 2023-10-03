@@ -6,10 +6,10 @@ class VistaAyudaApp extends StatefulWidget {
   const VistaAyudaApp({Key? key, required this.ajustes}) : super(key: key);
 
   @override
-  _VistaAyudaAppState createState() => _VistaAyudaAppState();
+  VistaAyudaAppState createState() => VistaAyudaAppState();
 }
 
-class _VistaAyudaAppState extends State<VistaAyudaApp> {
+class VistaAyudaAppState extends State<VistaAyudaApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,10 +56,7 @@ Card buildCard(String title, IconData icon) {
     child: ListTile(
       leading: Icon(icon),
       title: Text(title),
-      onTap: () {
-        print('Card seleccionada');
-        // Aquí puedes añadir tu propio método onPressed
-      },
+      onTap: () {},
     ),
   );
 }

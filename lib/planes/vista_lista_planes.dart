@@ -26,10 +26,10 @@ class VistaListaPlanes extends StatefulWidget {
         _onChangeNombre = onChangeNombre;
 
   @override
-  _VistaListaPlanesState createState() => _VistaListaPlanesState();
+  VistaListaPlanesState createState() => VistaListaPlanesState();
 }
 
-class _VistaListaPlanesState extends State<VistaListaPlanes> {
+class VistaListaPlanesState extends State<VistaListaPlanes> {
   List<Plan> busqueda = [];
   bool isSearch = false;
   late TextEditingController _descController;
@@ -60,10 +60,9 @@ class _VistaListaPlanesState extends State<VistaListaPlanes> {
   }
 
   bool _operadorBusqueda(Plan nota, String valor) {
-    if (valor == "") return true;
-    if (removeDiacritics(nota.nombre.toLowerCase()).contains(valor))
-      return true;
-    //if (nota.texto.toLowerCase().contains(valor)) return true;
+    if (valor.isEmpty) return true;
+    if (removeDiacritics(nota.nombre.toLowerCase())
+        .contains(removeDiacritics(valor.toLowerCase()))) return true;
 
     return false;
   }
@@ -80,10 +79,6 @@ class _VistaListaPlanesState extends State<VistaListaPlanes> {
       widget._meta.agregarTarea(widget._listaPlanes.id, _descController.text);
       widget._onChangeNombre();
     });
-    //Navigator.pop(context);
-    //ScaffoldMessenger.of(context).showSnackBar(
-    //  const SnackBar(content: Text('Cambios guardados')),
-    //);
   }
 
   @override
@@ -179,7 +174,7 @@ class _VistaListaPlanesState extends State<VistaListaPlanes> {
                             Icon(widget._ajustes.listaAmbitos[plan.tipo].icono),
                         title: Text(plan.nombre),
                         subtitle: Text(
-                            "${plan.horaInicio}:${plan.minInicio} - ${plan.horaFin}:${plan.minFin}"),
+                            "${plan.horaInicio}:${plan.minInicio.toString().padLeft(2, '0')} - ${plan.horaFin}:${plan.minFin.toString().padLeft(2, '0')}"),
                         onTap: () {
                           Navigator.of(context)
                               .push(

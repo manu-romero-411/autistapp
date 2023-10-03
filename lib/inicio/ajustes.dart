@@ -1,37 +1,36 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:autistapp/_aux/pair_ambito_icono%20copy.dart';
+import 'package:autistapp/_aux/rutina_generador.dart';
 import 'package:autistapp/_aux/pair_ambito_icono.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:path_provider/path_provider.dart';
 
 class Ajustes {
   bool _welcome = true;
-  String _theme = "";
+  bool _isDarkTheme = true;
   Color? _color;
   Color? _fgColor = Colors.white;
   Color? _bgColor = Colors.black;
   String _name = "";
-
-  Ajustes();
-
   int _minHoraGantt = 8;
   int _maxHoraGantt = 23;
+  int _frecNotif = 1;
+  FlutterLocalNotificationsPlugin flutNotif = FlutterLocalNotificationsPlugin();
+  Ajustes();
 
+  get frecNotif => _frecNotif;
+  set frecNotif(value) => _frecNotif = value;
+  get color => _color;
   get fgColor => _fgColor;
   get bgColor => _bgColor;
+  get isDarkTheme => _isDarkTheme;
 
-  get theme => _theme;
-
-  set theme(final value) {
-    _theme = value;
-
+  set setDarkTheme(final value) {
+    _isDarkTheme = value;
     guardarDatos();
   }
-
-  get color => _color;
 
   set color(value) {
     _color = value;
@@ -84,11 +83,12 @@ class Ajustes {
       final file = await _localFile;
       final contents = await file.readAsString();
       final data = jsonDecode(contents);
-      _theme = data['theme'];
+      _isDarkTheme = data['theme'];
       _color = Color(data['color']);
       _fgColor = Color(data['fgColor']);
       _bgColor = Color(data['bgColor']);
       _name = data['name'];
+      _frecNotif = data['frecNotif'];
       _minHoraGantt = data['minHoraGantt'];
       _maxHoraGantt = data['maxHoraGantt'];
       _welcome = data['welcome'] == true ? true : false;
@@ -100,12 +100,14 @@ class Ajustes {
   Future<void> guardarDatos() async {
     try {
       final file = await _localFile;
+
       final data = {
-        'theme': theme,
+        'theme': isDarkTheme,
         'color': color.value,
         'bgColor': bgColor.value,
         'fgColor': fgColor.value,
         'name': name,
+        'frecNotif': frecNotif,
         'minHoraGantt': minHoraGantt,
         'maxHoraGantt': maxHoraGantt,
         'welcome': welcome,
@@ -118,7 +120,7 @@ class Ajustes {
   }
 
   void defaultData() {
-    _theme = "dark";
+    _isDarkTheme = true;
     _color = Colors.blueGrey;
     _fgColor = Colors.white;
     _bgColor = Colors.black;
@@ -136,14 +138,14 @@ class Ajustes {
   final List<Color> colors = [
     Colors.brown,
     Colors.red,
-    Color.fromARGB(255, 148, 110, 145),
+    const Color.fromARGB(255, 148, 110, 145),
     Colors.orange,
     Colors.yellow,
     Colors.white,
     Colors.lime,
     Colors.lightGreen,
     Colors.green,
-    Color.fromARGB(255, 28, 163, 157),
+    const Color.fromARGB(255, 28, 163, 157),
     Colors.blue,
     const Color.fromRGBO(7, 63, 160, 1),
     Colors.blueGrey,
@@ -265,4 +267,23 @@ class Ajustes {
     Icons.trending_flat,
     Icons.priority_high
   ];
+
+  List<String> emoEmojis = ["😄", "😕", "😢", "😩"];
+  List<Color> emoColores = [
+    Colors.green,
+    Colors.amber,
+    Colors.red,
+    Colors.purpleAccent
+  ];
+
+  void initNotif() async {
+    // Inicializamos las notificaciones
+    var andNotiSettings =
+        const AndroidInitializationSettings('@mipmap/ic_launcher');
+    var iOSInitializationSettings = const DarwinInitializationSettings();
+
+    var initializationSettings = InitializationSettings(
+        android: andNotiSettings, iOS: iOSInitializationSettings);
+    flutNotif.initialize(initializationSettings);
+  }
 }

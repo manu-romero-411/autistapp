@@ -10,7 +10,7 @@ class EditorPlanes extends StatefulWidget {
   final Ajustes _ajustes;
   final Function() _onChangePlanes;
   final ListaPlanes _listaPlanes;
-  EditorPlanes(
+  const EditorPlanes(
       {super.key,
       this.plan,
       required ajustes,
@@ -20,12 +20,10 @@ class EditorPlanes extends StatefulWidget {
         _listaPlanes = listaPlanes,
         _onChangePlanes = onChangePlanes;
   @override
-  _EditorPlanesState createState() => _EditorPlanesState();
+  EditorPlanesState createState() => EditorPlanesState();
 }
 
-class _EditorPlanesState extends State<EditorPlanes> {
-  _EditorPlanesState();
-
+class EditorPlanesState extends State<EditorPlanes> {
   late TextEditingController _descController;
   late int _horaInicioController;
   late int _minInicioController;

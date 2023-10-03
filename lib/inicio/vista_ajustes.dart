@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:autistapp/inicio/ajustes.dart';
 import 'package:flutter/material.dart';
 
@@ -7,7 +9,8 @@ class VistaAjustes extends StatefulWidget {
   final Ajustes _ajustes;
 
   const VistaAjustes(
-      {required Ajustes ajustes,
+      {super.key,
+      required Ajustes ajustes,
       required dynamic Function(Color) onColorSelected,
       required onChangedAjustes})
       : _ajustes = ajustes,
@@ -15,29 +18,30 @@ class VistaAjustes extends StatefulWidget {
         _onChangedAjustes = onChangedAjustes;
 
   @override
-  _VistaAjustesState createState() => _VistaAjustesState();
+  VistaAjustesState createState() => VistaAjustesState();
 }
 
-class _VistaAjustesState extends State<VistaAjustes> {
+class VistaAjustesState extends State<VistaAjustes> {
   late TextEditingController _textController;
-  bool _notificationsEnabled = false;
-  String _frequency = '1 hora';
 
   Color? selectedColor;
   int? _horaMin;
   int? _horaMax;
+  int? _freqNoti;
 
   @override
   void initState() {
     super.initState();
     _horaMin = widget._ajustes.minHoraGantt;
     _horaMax = widget._ajustes.maxHoraGantt;
-
+    _freqNoti = widget._ajustes.frecNotif;
     selectedColor = widget._ajustes.color;
     _textController = TextEditingController(text: widget._ajustes.name);
   }
 
   void guardarSalir() {
+    widget._ajustes.guardarDatos();
+
     setState(() {
       if (_horaMax! <= _horaMin!) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -49,6 +53,7 @@ class _VistaAjustesState extends State<VistaAjustes> {
         widget._ajustes.name = _textController.text;
         widget._ajustes.minHoraGantt = _horaMin;
         widget._ajustes.maxHoraGantt = _horaMax;
+        widget._ajustes.frecNotif = _freqNoti;
         widget._onChangedAjustes();
         if (!context.mounted) return;
 
@@ -92,7 +97,7 @@ class _VistaAjustesState extends State<VistaAjustes> {
                 const EdgeInsets.only(top: 10, bottom: 20, left: 16, right: 16),
             child: Card(
               child: Padding(
-                padding: EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8),
                 child: Row(
                   children: [
                     const SizedBox(width: 10),
@@ -106,8 +111,7 @@ class _VistaAjustesState extends State<VistaAjustes> {
                     Expanded(
                       child: TextField(
                         controller: _textController,
-                        maxLines: null,
-                        keyboardType: TextInputType.multiline,
+                        maxLines: 1,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16.0),
@@ -197,42 +201,20 @@ class _VistaAjustesState extends State<VistaAjustes> {
               ),
             ),
           ),
-          const Text(
-            "Notificaciones",
-            style: TextStyle(fontSize: 16),
-          ),
-          Padding(
-              padding: const EdgeInsets.only(
-                  top: 10, bottom: 20, left: 16, right: 16),
-              child: Card(
-                child: Container(
-                  margin: const EdgeInsets.only(left: 20, right: 20),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Row(
-                            children: [
-                              Icon(Icons.notifications),
-                              SizedBox(width: 10),
-                              Text(
-                                'Notificaciones',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                            ],
-                          ),
-                          Switch(
-                            value: _notificationsEnabled,
-                            onChanged: (bool newValue) {
-                              setState(() {
-                                _notificationsEnabled = newValue;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                      if (_notificationsEnabled)
+          if (Platform.isAndroid)
+            const Text(
+              "Notificaciones",
+              style: TextStyle(fontSize: 16),
+            ),
+          if (Platform.isAndroid)
+            Padding(
+                padding: const EdgeInsets.only(
+                    top: 10, bottom: 20, left: 16, right: 16),
+                child: Card(
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 20, right: 20),
+                    child: Column(
+                      children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -241,35 +223,36 @@ class _VistaAjustesState extends State<VistaAjustes> {
                                 Icon(Icons.hourglass_bottom),
                                 SizedBox(width: 10),
                                 Text(
-                                  'Frecuencia',
+                                  'Recordatorios',
                                   style: TextStyle(fontSize: 16),
                                 ),
                               ],
                             ),
-                            DropdownButton<String>(
-                              value: _frequency,
-                              onChanged: (String? newValue) {
+                            DropdownButton<int>(
+                              value: _freqNoti,
+                              onChanged: (int? newValue) {
                                 setState(() {
-                                  _frequency = newValue!;
+                                  _freqNoti = newValue!;
                                 });
                               },
-                              items: <String>[
-                                '1 hora',
-                                '2 horas',
-                                '3 horas'
-                              ].map<DropdownMenuItem<String>>((String value) {
-                                return DropdownMenuItem<String>(
+                              items: <int>[1, 2, 3]
+                                  .map<DropdownMenuItem<int>>((int value) {
+                                return DropdownMenuItem<int>(
                                   value: value,
-                                  child: Text(value),
+                                  child: Text(value == 1
+                                      ? 'Frecuencia alta'
+                                      : value == 2
+                                          ? 'Frecuencia media'
+                                          : 'Frecuencia baja'),
                                 );
                               }).toList(),
-                            ),
+                            )
                           ],
                         ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              )),
+                )),
           const Text(
             "Colores de la app",
             style: TextStyle(fontSize: 16),
@@ -289,18 +272,17 @@ class _VistaAjustesState extends State<VistaAjustes> {
   }
 }
 
-/**/
-
 class ColorSelectionGrid extends StatefulWidget {
   final Ajustes ajustes;
   final Function(Color) onColorSelected;
 
-  ColorSelectionGrid({required this.ajustes, required this.onColorSelected});
+  const ColorSelectionGrid(
+      {super.key, required this.ajustes, required this.onColorSelected});
   @override
-  _ColorSelectionGridState createState() => _ColorSelectionGridState();
+  ColorSelectionGridState createState() => ColorSelectionGridState();
 }
 
-class _ColorSelectionGridState extends State<ColorSelectionGrid> {
+class ColorSelectionGridState extends State<ColorSelectionGrid> {
   Color? _selectedColor;
 
   @override

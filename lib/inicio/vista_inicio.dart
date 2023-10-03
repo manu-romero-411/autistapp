@@ -2,15 +2,14 @@ import 'dart:io';
 import 'package:autistapp/apuntes/audio/lista_notas_voz.dart';
 import 'package:autistapp/apuntes/audio/vista_grabador_audio.dart';
 import 'package:autistapp/apuntes/texto/vista_editor_texto.dart';
-import 'package:autistapp/autoayuda/vista_auto_ayuda.dart';
 import 'package:autistapp/inicio/ajustes.dart';
 import 'package:autistapp/inicio/vista_ajustes.dart';
 import 'package:autistapp/inicio/menu_lateral.dart';
 import 'package:autistapp/tareas/lista_tareas.dart';
 import 'package:autistapp/tareas/vista_editar_tarea.dart';
 import 'package:autistapp/tareas/tarea.dart';
-import 'package:autistapp/tareas/vida_diaria/dia.dart';
-import 'package:autistapp/tareas/vida_diaria/rutina.dart';
+import 'package:autistapp/calendario/dia.dart';
+import 'package:autistapp/inicio/rutina.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:intl/intl.dart';
@@ -26,14 +25,14 @@ class VistaInicio extends StatefulWidget {
       : _ajustes = ajustes;
 
   final Ajustes _ajustes;
-  final ValueChanged<String> onThemeChanged;
+  final ValueChanged<bool> onThemeChanged;
   final ValueChanged<Color> onChangeColour;
 
   @override
-  _VistaInicioState createState() => _VistaInicioState();
+  VistaInicioState createState() => VistaInicioState();
 }
 
-class _VistaInicioState extends State<VistaInicio> {
+class VistaInicioState extends State<VistaInicio> {
   final listaTareas = ListaTareas();
   final listaRutinas = ListaRutinas();
   String nombre = "";
@@ -42,7 +41,7 @@ class _VistaInicioState extends State<VistaInicio> {
       nombre: '',
       mood: -1,
       texto: '');
-
+  bool _isEditing = false;
   final TextEditingController _textFieldController = TextEditingController();
 
   List<Tarea> busqueda = [];
@@ -50,10 +49,16 @@ class _VistaInicioState extends State<VistaInicio> {
   @override
   void initState() {
     super.initState();
-    dia.cargarDatos();
+
+    dia.cargarDatos().then((_) {
+      setState(() {
+        _textFieldController.text = dia.texto;
+      });
+    });
+
     widget._ajustes.cargarDatos().then((_) {
       setState(() {
-        widget.onThemeChanged(widget._ajustes.theme);
+        widget.onThemeChanged(widget._ajustes.isDarkTheme);
       });
     });
 
@@ -63,8 +68,8 @@ class _VistaInicioState extends State<VistaInicio> {
       });
     });
 
-    setState(() {
-      regenerarRutinas();
+    regenerarRutinas().then((_) {
+      setState(() {});
     });
   }
 
@@ -84,46 +89,11 @@ class _VistaInicioState extends State<VistaInicio> {
       for (int i = 0; i < widget._ajustes.rutinas.length; ++i) {
         listaRutinas.agregarRutina(
             const Uuid().v4(), widget._ajustes.rutinas[i].nombre, false);
-      } /*
-      listaRutinas.agregarRutina(const Uuid().v4(), "Primera rutina",
-          const TimeOfDay(hour: 8, minute: 00), false);
-      listaRutinas.agregarRutina(const Uuid().v4(), "Segunda rutina",
-          const TimeOfDay(hour: 9, minute: 00), false);*/
-    } else {
-      listaRutinas.cargarDatos();
+      }
     }
-  }
-
-  Future<String?> _popUpResumenDia(BuildContext context, String titulo) async {
-    return showDialog<String>(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text(titulo),
-            content: TextField(
-              controller: _textFieldController,
-              decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.0),
-                  ),
-                  hintText: "Comenta algo sobre tu día"),
-            ),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Cancelar'),
-                onPressed: () {
-                  Navigator.pop(context, "");
-                },
-              ),
-              TextButton(
-                child: const Text('OK'),
-                onPressed: () {
-                  Navigator.pop(context, _textFieldController.text);
-                },
-              ),
-            ],
-          );
-        });
+    listaRutinas.cargarDatos(null).then((_) {
+      setState(() {});
+    });
   }
 
   void actualizarListasTareas() {
@@ -145,6 +115,16 @@ class _VistaInicioState extends State<VistaInicio> {
     });
   }
 
+  void textoResumenDia() {
+    setState(() {
+      dia.texto = _textFieldController.text;
+    });
+    _isEditing = false;
+    const snackBar = SnackBar(content: Text('Texto diario editado con éxito.'));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    dia.guardarDatos();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -155,7 +135,7 @@ class _VistaInicioState extends State<VistaInicio> {
             : widget._ajustes.color,
         appBar: AppBar(
             centerTitle: true,
-            title: Text("autistApp",
+            title: Text("AutistApp - Inicio",
                 style: TextStyle(color: widget._ajustes.fgColor)),
             backgroundColor: widget._ajustes.color,
             leading: Builder(
@@ -195,7 +175,7 @@ class _VistaInicioState extends State<VistaInicio> {
                 height: 28,
               ),
               Text(
-                "¡Te damos la bienvenida, ${widget._ajustes.name}!",
+                "¡Te damos la bienvenida${widget._ajustes.name.toString().isEmpty ? "" : ",  ${widget._ajustes.name}"}!",
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 32,
@@ -216,86 +196,109 @@ class _VistaInicioState extends State<VistaInicio> {
               const SizedBox(
                 height: 16,
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FloatingActionButton(
-                    backgroundColor: dia.mood == 0
-                        ? Colors.green
-                        : const Color.fromARGB(255, 212, 222, 219),
-                    heroTag: "feliz",
-                    onPressed: () async {
-                      String? result =
-                          await _popUpResumenDia(context, 'Mi título');
+              Center(
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        for (int i = 0;
+                            i < widget._ajustes.emoEmojis.length;
+                            ++i)
+                          Row(
+                            children: [
+                              FloatingActionButton(
+                                backgroundColor: dia.mood == i
+                                    ? widget._ajustes.emoColores[i]
+                                    : const Color.fromARGB(255, 212, 222, 219),
+                                heroTag: widget._ajustes.emoEmojis[i],
+                                onPressed: () async {
+                                  setState(() {
+                                    dia.mood = i;
+                                    _isEditing = true;
+                                  });
 
-                      setState(() {
-                        dia.texto = result;
-                        dia.mood = 0;
-                        dia.guardarDatos();
-                      });
-                    },
-                    child: const Text("😄", style: TextStyle(fontSize: 32)),
-                  ),
-                  const SizedBox(width: 16), // Espacio entre botones
-                  FloatingActionButton(
-                    backgroundColor: dia.mood == 1
-                        ? Colors.amber
-                        : const Color.fromARGB(255, 212, 222, 219),
-                    heroTag: "neutral",
-                    onPressed: () async {
-                      String? result =
-                          await _popUpResumenDia(context, 'Mi título');
-                      setState(() {
-                        dia.texto = result;
-
-                        dia.mood = 1;
-                        dia.guardarDatos();
-                      });
-                    },
-                    child: const Text("😕", style: TextStyle(fontSize: 32)),
-                  ),
-                  const SizedBox(width: 16),
-                  FloatingActionButton(
-                    backgroundColor: dia.mood == 2
-                        ? Colors.red
-                        : const Color.fromARGB(255, 212, 222, 219),
-                    heroTag: "triste",
-                    onPressed: () async {
-                      String? result =
-                          await _popUpResumenDia(context, 'Mi título');
-                      print(result);
-                      setState(() {
-                        dia.texto = result;
-
-                        dia.mood = 2;
-                        dia.guardarDatos();
-                      });
-                    },
-                    child: const Text("😢", style: TextStyle(fontSize: 32)),
-                  ),
-
-                  const SizedBox(width: 16),
-                  FloatingActionButton(
-                    backgroundColor: dia.mood == 3
-                        ? Colors.purple
-                        : const Color.fromARGB(255, 212, 222, 219),
-                    heroTag: "cansado",
-                    onPressed: () async {
-                      String? result =
-                          await _popUpResumenDia(context, 'Mi título');
-                      setState(() {
-                        dia.texto = result;
-
-                        dia.mood = 3;
-                        dia.guardarDatos();
-                      });
-                    },
-                    child: const Text("😩", style: TextStyle(fontSize: 32)),
-                  ),
-                ],
+                                  dia.guardarDatos();
+                                },
+                                child: Text(widget._ajustes.emoEmojis[i],
+                                    style: const TextStyle(fontSize: 32)),
+                              ),
+                              SizedBox(
+                                  width:
+                                      i == widget._ajustes.emoEmojis.length - 1
+                                          ? 0
+                                          : 16), // Espacio entre botones
+                            ],
+                          ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 16,
+                    )
+                  ],
+                ),
               ),
-              const SizedBox(
-                height: 16,
+              SizedBox(
+                height: _isEditing ? 16 : 0,
+              ),
+              _isEditing
+                  ? TextField(
+                      minLines: 1,
+                      maxLines: 5,
+                      maxLength: 300,
+                      style: TextStyle(color: widget._ajustes.fgColor),
+                      onSubmitted: (event) {
+                        textoResumenDia();
+                      },
+                      controller: _textFieldController,
+                      cursorColor: widget._ajustes.fgColor,
+                      decoration: InputDecoration(
+                        counterStyle: TextStyle(color: widget._ajustes.fgColor),
+                        focusColor: widget._ajustes.fgColor,
+                        iconColor: widget._ajustes.fgColor,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16.0),
+                            borderSide:
+                                BorderSide(color: widget._ajustes.fgColor)),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                          borderSide: BorderSide(
+                              color: widget._ajustes
+                                  .fgColor), // Cambia esto al color que desees para el borde en foco.
+                        ),
+                        label: Text(
+                          "Comenta algo sobre tu día",
+                          style: TextStyle(color: widget._ajustes.fgColor),
+                        ),
+                        prefixIcon: IconButton(
+                          icon: Icon(
+                            Icons.close,
+                            color: widget._ajustes.fgColor,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isEditing = false;
+                            });
+                            _textFieldController.text = dia.texto;
+                          },
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            Icons.save,
+                            color: widget._ajustes.fgColor,
+                          ),
+                          onPressed: () {
+                            textoResumenDia();
+                          },
+                        ),
+                      ),
+                    )
+                  : const SizedBox(height: 0),
+              SizedBox(
+                height: _isEditing ? 0 : 28,
               ),
               RichText(
                 textAlign: TextAlign.center,
@@ -376,6 +379,8 @@ class _VistaInicioState extends State<VistaInicio> {
                               key: Key(tarea.id),
                               onDismissed: (direction) {
                                 setState(() {
+                                  widget._ajustes.flutNotif
+                                      .cancel(busqueda[reversedIndex].notifId);
                                   listaTareas.eliminarTarea(
                                       busqueda[reversedIndex].id);
                                   listaTareas.guardarDatos();
@@ -410,7 +415,8 @@ class _VistaInicioState extends State<VistaInicio> {
                                         .icono,
                                     color: listaTareas
                                             .getPendientesOtrosDias(tarea)
-                                        ? Color.fromARGB(255, 212, 131, 226)
+                                        ? const Color.fromARGB(
+                                            255, 212, 131, 226)
                                         : widget._ajustes
                                             .prioridadesColor[tarea.prioridad],
                                   ),
@@ -421,17 +427,15 @@ class _VistaInicioState extends State<VistaInicio> {
                                             decoration:
                                                 TextDecoration.lineThrough,
                                             fontSize: 14,
-                                            color:
-                                                widget._ajustes.theme == "dark"
-                                                    ? const Color.fromARGB(
-                                                        255, 255, 255, 255)
-                                                    : const Color.fromARGB(
-                                                        255, 30, 30, 30))
+                                            color: widget._ajustes.isDarkTheme
+                                                ? const Color.fromARGB(
+                                                    255, 255, 255, 255)
+                                                : const Color.fromARGB(
+                                                    255, 30, 30, 30))
                                         : TextStyle(
                                             decoration: TextDecoration.none,
                                             fontSize: 14,
-                                            color: widget._ajustes.theme ==
-                                                    "dark"
+                                            color: widget._ajustes.isDarkTheme
                                                 ? const Color.fromARGB(
                                                     255, 255, 255, 255)
                                                 : const Color.fromARGB(
@@ -474,45 +478,44 @@ class _VistaInicioState extends State<VistaInicio> {
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    ...List.generate(listaRutinas.getSize(), (index) {
-                      final rutina = listaRutinas.get(index);
-                      return CheckboxListTile(
-                        activeColor: widget._ajustes.color,
-
-                        dense: true,
-                        secondary: widget._ajustes.getRutinaIcon(index),
-                        title: RichText(
-                          text: TextSpan(
-                            text: rutina.nombre,
-                            style: rutina.completada
-                                ? TextStyle(
-                                    decoration: TextDecoration.lineThrough,
-                                    fontSize: 14,
-                                    color: widget._ajustes.theme == "dark"
-                                        ? const Color.fromARGB(
-                                            255, 255, 255, 255)
-                                        : const Color.fromARGB(255, 30, 30, 30))
-                                : TextStyle(
-                                    decoration: TextDecoration.none,
-                                    fontSize: 14,
-                                    color: widget._ajustes.theme == "dark"
-                                        ? const Color.fromARGB(
-                                            255, 255, 255, 255)
-                                        : const Color.fromARGB(
-                                            255, 30, 30, 30)),
+                    if (listaRutinas.getSize() > 0)
+                      ...List.generate(listaRutinas.getSize(), (index) {
+                        final rutina = listaRutinas.get(index);
+                        return CheckboxListTile(
+                          activeColor: widget._ajustes.color,
+                          dense: true,
+                          secondary: widget._ajustes.getRutinaIcon(index),
+                          title: RichText(
+                            text: TextSpan(
+                              text: rutina.nombre,
+                              style: rutina.completada
+                                  ? TextStyle(
+                                      decoration: TextDecoration.lineThrough,
+                                      fontSize: 14,
+                                      color: widget._ajustes.isDarkTheme
+                                          ? const Color.fromARGB(
+                                              255, 255, 255, 255)
+                                          : const Color.fromARGB(
+                                              255, 30, 30, 30))
+                                  : TextStyle(
+                                      decoration: TextDecoration.none,
+                                      fontSize: 14,
+                                      color: widget._ajustes.isDarkTheme
+                                          ? const Color.fromARGB(
+                                              255, 255, 255, 255)
+                                          : const Color.fromARGB(
+                                              255, 30, 30, 30)),
+                            ),
                           ),
-                        ),
-                        //subtitle: Text(DateFormat('HH:mm', "es_ES")
-                        // .format(rutina.getHoraAsDateTime())),
-                        value: rutina.completada,
-                        onChanged: (bool? value) {
-                          setState(() {
-                            rutina.completada = value!;
+                          value: rutina.completada,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              rutina.completada = value!;
+                            });
                             listaRutinas.guardarDatos();
-                          });
-                        },
-                      );
-                    }),
+                          },
+                        );
+                      }),
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -593,21 +596,22 @@ class _VistaInicioState extends State<VistaInicio> {
                 });
               },
             ),
-            SpeedDialChild(
+            /*SpeedDialChild(
               child: const Icon(Icons.feedback),
               label: '¡Necesito ayuda!',
               onTap: () {
                 Navigator.of(context)
                     .push(
                   MaterialPageRoute(
-                    builder: (context) => VistaAyuda(ajustes: widget._ajustes),
+                    builder: (context) =>
+                        MyAppChu(), //VistaAyuda(ajustes: widget._ajustes),
                   ),
                 )
                     .then((_) {
                   setState(() {});
                 });
               },
-            ),
+            ),*/
           ],
         ));
   }

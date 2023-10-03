@@ -9,10 +9,10 @@ class VistaPautasSociales extends StatefulWidget {
         super(key: key);
 
   @override
-  _VistaPautasSocialesState createState() => _VistaPautasSocialesState();
+  VistaPautasSocialesState createState() => VistaPautasSocialesState();
 }
 
-class _VistaPautasSocialesState extends State<VistaPautasSociales> {
+class VistaPautasSocialesState extends State<VistaPautasSociales> {
   List<Widget> _pages = [];
   int _currentPage = 0;
   final PageController _pageController = PageController();

@@ -1,4 +1,4 @@
-import 'dart:math';
+// ignore_for_file: must_be_immutable
 
 import 'package:autistapp/inicio/ajustes.dart';
 import 'package:autistapp/planes/lista_planes.dart';
@@ -23,10 +23,10 @@ class VistaDiagramaTareas extends StatefulWidget {
         super(key: key);
 
   @override
-  _VistaDiagramaTareasState createState() => _VistaDiagramaTareasState();
+  VistaDiagramaTareasState createState() => VistaDiagramaTareasState();
 }
 
-class _VistaDiagramaTareasState extends State<VistaDiagramaTareas> {
+class VistaDiagramaTareasState extends State<VistaDiagramaTareas> {
   late ListaPlanes listaPlanes;
 
   @override
@@ -114,7 +114,7 @@ class _VistaDiagramaTareasState extends State<VistaDiagramaTareas> {
 class GanttChart extends StatefulWidget {
   final Ajustes ajustes;
 
-  GanttChart({required this.planes, required this.ajustes});
+  const GanttChart({super.key, required this.planes, required this.ajustes});
 
   final List<Plan> planes;
 
@@ -242,7 +242,7 @@ class _GanttChartState extends State<GanttChart> {
                   width: 150,
                   height: widget.planes.length * alturaBarras,
                   decoration: BoxDecoration(
-                    color: widget.ajustes.theme == "light"
+                    color: !widget.ajustes.isDarkTheme
                         ? Colors.white
                         : Colors.black45,
                     boxShadow: [
@@ -250,7 +250,7 @@ class _GanttChartState extends State<GanttChart> {
                         color: Colors.grey.withOpacity(0.1),
                         spreadRadius: 5,
                         blurRadius: 7,
-                        offset: Offset(0, 3),
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
@@ -260,9 +260,8 @@ class _GanttChartState extends State<GanttChart> {
                       Container(
                         alignment: Alignment
                             .centerLeft, // Alinea a la izquierda el label de la hora
-                        child: Text(""),
+                        child: const SizedBox(height: 24),
                       ),
-                      const Divider(),
                       Column(mainAxisSize: MainAxisSize.min, children: [
                         for (int j = 0; j < widget.planes.length; j++)
                           Container(
