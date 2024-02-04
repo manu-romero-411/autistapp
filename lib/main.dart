@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
 import 'package:autistapp/inicio/ajustes.dart';
 import 'package:autistapp/inicio/vista_bienvenida.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +7,7 @@ import 'package:autistapp/inicio/vista_inicio.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:workmanager/workmanager.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 
 Workmanager workmanager = Workmanager();
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -206,27 +206,44 @@ class AutistAppMainState extends State<AutistAppMain> {
     });
   }
 
+  static final _defaultLightColorScheme =
+      ColorScheme.fromSwatch(primarySwatch: Colors.blue);
+
+  static final _defaultDarkColorScheme = ColorScheme.fromSwatch(
+      primarySwatch: Colors.blue, brightness: Brightness.dark);
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     } else {
-      return MaterialApp(
-        theme: getThemeData(),
-        initialRoute: ajustes.welcome ? '/welcome' : "/home",
-        routes: {
-          '/welcome': (context) => PantallaBienvenida(
-                ajustes: ajustes,
-                onThemeChanged: (value) => theme = value,
-                onColorSelected: (colorSel) => selectedColor = colorSel,
-              ),
-          '/home': (context) => VistaInicio(
-                ajustes: ajustes,
-                onThemeChanged: (value) => theme = value,
-                onChangeColour: (colorSel) => selectedColor = colorSel,
-              ),
-        },
-      );
+      return DynamicColorBuilder(builder: (lightColorScheme, darkColorScheme) {
+        return MaterialApp(
+          title: 'AutistApp',
+          theme: ThemeData(
+            colorScheme: lightColorScheme ?? _defaultLightColorScheme,
+            useMaterial3: true,
+          ),
+          darkTheme: ThemeData(
+            colorScheme: darkColorScheme ?? _defaultDarkColorScheme,
+            useMaterial3: true,
+          ),
+          themeMode: ThemeMode.system,
+          initialRoute: ajustes.welcome ? '/welcome' : "/home",
+          routes: {
+            '/welcome': (context) => PantallaBienvenida(
+                  ajustes: ajustes,
+                  onThemeChanged: (value) => theme = value,
+                  onColorSelected: (colorSel) => selectedColor = colorSel,
+                ),
+            '/home': (context) => VistaInicio(
+                  ajustes: ajustes,
+                  onThemeChanged: (value) => theme = value,
+                  onChangeColour: (colorSel) => selectedColor = colorSel,
+                ),
+          },
+        );
+      });
     }
   }
 }

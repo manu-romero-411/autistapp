@@ -305,7 +305,6 @@ class VistaDiaState extends State<VistaDia> {
                                       builder: (context) => EditorNotas(
                                         nota: listaNotasTexto.notas[index],
                                         ajustes: widget.ajustes,
-                                        onChangeList: actualizarListaTexto,
                                       ),
                                     ),
                                   )
