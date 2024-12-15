@@ -4,9 +4,8 @@ import 'package:flutter/material.dart';
 
 class VistaSobrecarga extends StatefulWidget {
   final Ajustes _ajustes;
-  const VistaSobrecarga({Key? key, required Ajustes ajustes})
-      : _ajustes = ajustes,
-        super(key: key);
+  const VistaSobrecarga({super.key, required Ajustes ajustes})
+      : _ajustes = ajustes;
 
   @override
   VistaSobrecargaState createState() => VistaSobrecargaState();

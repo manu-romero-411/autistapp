@@ -1,9 +1,16 @@
-# AutistApp
+# autistapp
 
-El trabajo consiste en la elaboración del análisis, diseño e implementación de un prototipo de una aplicación móvil que sirva de asistente personal para personas con TEA (Trastorno del Espectro Autista).
+A new Flutter project.
 
-La aplicación contará con diversas funciones que ayudarán a estas personas en su desarrollo y autonomía personal, como gestor de tareas, gestor de rutinas cotidianas, registro de emociones y estado de ánimo cotidiano, visualizador de tablas de planes basadas en diagramas de Gantt, y sistema de notas de texto y voz.
+## Getting Started
 
-Se ha enfocado el análisis de requisitos de la aplicación contando con profesionales de la psicología que han proporcionado información orientativa relativa al trabajo en terapia con una persona con TEA.
+This project is a starting point for a Flutter application.
 
-La aplicación se ha construido con el framework multiplataforma Flutter, favoreciendo la agilidad en el desarrollo y la expansión de características en un futuro en el que se plantea su publicación.
+A few resources to get you started if this is your first Flutter project:
+
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.

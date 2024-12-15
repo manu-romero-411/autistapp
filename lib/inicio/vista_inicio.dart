@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:autistapp/apuntes/audio/lista_notas_voz.dart';
-import 'package:autistapp/apuntes/audio/vista_grabador_audio.dart';
 import 'package:autistapp/apuntes/texto/vista_editor_texto.dart';
 import 'package:autistapp/inicio/ajustes.dart';
 import 'package:autistapp/inicio/vista_ajustes.dart';
@@ -379,8 +378,6 @@ class VistaInicioState extends State<VistaInicio> {
                               key: Key(tarea.id),
                               onDismissed: (direction) {
                                 setState(() {
-                                  widget._ajustes.flutNotif
-                                      .cancel(busqueda[reversedIndex].notifId);
                                   listaTareas.eliminarTarea(
                                       busqueda[reversedIndex].id);
                                   listaTareas.guardarDatos();
@@ -557,25 +554,7 @@ class VistaInicioState extends State<VistaInicio> {
             SpeedDialChild(
               child: const Icon(Icons.mic),
               label: 'Nueva nota de voz',
-              onTap: () {
-                Navigator.of(context)
-                    .push(
-                  MaterialPageRoute(
-                      builder: (context) => GrabadorAudio(
-                          ajustes: widget._ajustes,
-                          listaNotasVoz: ListaNotasVoz(),
-                          onUpdateLista: () {
-                            setState(() {});
-                          })),
-                )
-                    .then((_) {
-                  listaTareas.cargarDatos().then((_) {
-                    setState(() {
-                      busqueda = listaTareas.toList();
-                    });
-                  });
-                });
-              },
+              onTap: null
             ),
             SpeedDialChild(
               child: const Icon(Icons.edit_document),

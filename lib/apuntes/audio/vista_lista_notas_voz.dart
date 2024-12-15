@@ -1,6 +1,5 @@
 import 'package:autistapp/apuntes/audio/lista_notas_voz.dart';
 import 'package:autistapp/apuntes/audio/nota_voz.dart';
-import 'package:autistapp/apuntes/audio/vista_grabador_audio.dart';
 import 'package:autistapp/inicio/ajustes.dart';
 import 'package:diacritic/diacritic.dart';
 import 'package:flutter/material.dart';
@@ -142,26 +141,7 @@ class VistaListaNotasVozState extends State<VistaListaNotasVoz> {
                         subtitle: Text(
                             DateFormat('yyyy-MM-dd - EEEE - HH:mm:ss', "es_ES")
                                 .format(nota.fecha)),
-                        onTap: () {
-                          Navigator.of(context)
-                              .push(
-                            MaterialPageRoute(
-                              builder: (context) => GrabadorAudio(
-                                ajustes: widget._ajustes,
-                                nota: nota,
-                                listaNotasVoz: listaNotasVoz,
-                                onUpdateLista: actualizarLista,
-                              ),
-                            ),
-                          )
-                              .then((_) {
-                            listaNotasVoz.cargarDatos().then((_) {
-                              setState(() {
-                                busqueda = listaNotasVoz.toList();
-                              });
-                            });
-                          });
-                        },
+                        onTap: null
                       );
                     },
                   ),
@@ -173,24 +153,7 @@ class VistaListaNotasVozState extends State<VistaListaNotasVoz> {
         foregroundColor: widget._ajustes.fgColor,
         heroTag: "btn3",
         child: const Icon(Icons.add),
-        onPressed: () {
-          Navigator.of(context)
-              .push(
-            MaterialPageRoute(
-              builder: (context) => GrabadorAudio(
-                  ajustes: widget._ajustes,
-                  listaNotasVoz: listaNotasVoz,
-                  onUpdateLista: actualizarLista),
-            ),
-          )
-              .then((_) {
-            listaNotasVoz.cargarDatos().then((_) {
-              setState(() {
-                busqueda = listaNotasVoz.toList();
-              });
-            });
-          });
-        },
+        onPressed: null
       ),
     );
   }

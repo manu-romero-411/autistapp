@@ -4,9 +4,8 @@ import 'package:flutter/material.dart';
 
 class VistaAyuda extends StatefulWidget {
   final Ajustes _ajustes;
-  const VistaAyuda({Key? key, required Ajustes ajustes})
-      : _ajustes = ajustes,
-        super(key: key);
+  const VistaAyuda({super.key, required Ajustes ajustes})
+      : _ajustes = ajustes;
 
   @override
   VistaAyudaState createState() => VistaAyudaState();

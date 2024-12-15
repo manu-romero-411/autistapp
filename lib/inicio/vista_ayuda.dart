@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 class VistaAyudaApp extends StatefulWidget {
   final Ajustes ajustes;
-  const VistaAyudaApp({Key? key, required this.ajustes}) : super(key: key);
+  const VistaAyudaApp({super.key, required this.ajustes});
 
   @override
   VistaAyudaAppState createState() => VistaAyudaAppState();

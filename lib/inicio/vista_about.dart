@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 class VistaAbout extends StatefulWidget {
   final Ajustes ajustes;
-  const VistaAbout({Key? key, required this.ajustes}) : super(key: key);
+  const VistaAbout({super.key, required this.ajustes});
 
   @override
   VistaAboutState createState() => VistaAboutState();

@@ -11,9 +11,8 @@ class MenuLateral extends StatefulWidget {
   final Ajustes _ajustes;
 
   const MenuLateral(
-      {Key? key, required this.onThemeChanged, required Ajustes ajustes})
-      : _ajustes = ajustes,
-        super(key: key);
+      {super.key, required this.onThemeChanged, required Ajustes ajustes})
+      : _ajustes = ajustes;
   final ValueChanged<bool> onThemeChanged;
 
   @override

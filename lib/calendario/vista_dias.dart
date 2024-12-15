@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:autistapp/apuntes/audio/lista_notas_voz.dart';
-import 'package:autistapp/apuntes/audio/vista_grabador_audio.dart';
 import 'package:autistapp/apuntes/texto/lista_notas_texto.dart';
 import 'package:autistapp/apuntes/texto/vista_editor_texto.dart';
 import 'package:autistapp/inicio/ajustes.dart';
@@ -14,7 +13,7 @@ import 'package:table_calendar/table_calendar.dart';
 
 class VistaCalendario extends StatefulWidget {
   final Ajustes ajustes;
-  const VistaCalendario({Key? key, required this.ajustes}) : super(key: key);
+  const VistaCalendario({super.key, required this.ajustes});
 
   final String title = "¿Cómo te ha ido cada día?";
 
@@ -139,8 +138,7 @@ class VistaDia extends StatefulWidget {
   final Ajustes ajustes;
   final DateTime selectedDate;
 
-  const VistaDia({Key? key, required this.selectedDate, required this.ajustes})
-      : super(key: key);
+  const VistaDia({super.key, required this.selectedDate, required this.ajustes});
 
   @override
   VistaDiaState createState() => VistaDiaState();
@@ -363,29 +361,7 @@ class VistaDiaState extends State<VistaDia> {
                                     .icono),
                                 title: Text(
                                     listaNotasVoz.toList()[index].descripcion),
-                                onTap: () {
-                                  Navigator.of(context)
-                                      .push(
-                                    MaterialPageRoute(
-                                      builder: (context) => GrabadorAudio(
-                                          nota: listaNotasVoz.notas[index],
-                                          ajustes: widget.ajustes,
-                                          listaNotasVoz: listaNotasVoz,
-                                          onUpdateLista: () {
-                                            setState(() {});
-                                          }),
-                                    ),
-                                  )
-                                      .then((_) {
-                                    listaNotasTexto
-                                        .cargarDatosPorFecha(
-                                            DateFormat("yyyy-MM-dd")
-                                                .format(widget.selectedDate))
-                                        .then((_) {
-                                      setState(() {});
-                                    });
-                                  });
-                                },
+                                onTap: null
                               );
                             },
                           ),

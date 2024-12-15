@@ -4,9 +4,8 @@ import 'package:flutter/material.dart';
 
 class VistaPautasSociales extends StatefulWidget {
   final Ajustes _ajustes;
-  const VistaPautasSociales({Key? key, required Ajustes ajustes})
-      : _ajustes = ajustes,
-        super(key: key);
+  const VistaPautasSociales({super.key, required Ajustes ajustes})
+      : _ajustes = ajustes;
 
   @override
   VistaPautasSocialesState createState() => VistaPautasSocialesState();

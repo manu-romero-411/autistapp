@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:autistapp/_aux/rutina_generador.dart';
 import 'package:autistapp/_aux/pair_ambito_icono.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:path_provider/path_provider.dart';
 
 class Ajustes {
@@ -17,7 +16,6 @@ class Ajustes {
   int _minHoraGantt = 8;
   int _maxHoraGantt = 23;
   int _frecNotif = 1;
-  FlutterLocalNotificationsPlugin flutNotif = FlutterLocalNotificationsPlugin();
   Ajustes();
 
   get frecNotif => _frecNotif;
@@ -276,14 +274,4 @@ class Ajustes {
     Colors.purpleAccent
   ];
 
-  void initNotif() async {
-    // Inicializamos las notificaciones
-    var andNotiSettings =
-        const AndroidInitializationSettings('@mipmap/ic_launcher');
-    var iOSInitializationSettings = const DarwinInitializationSettings();
-
-    var initializationSettings = InitializationSettings(
-        android: andNotiSettings, iOS: iOSInitializationSettings);
-    flutNotif.initialize(initializationSettings);
-  }
 }

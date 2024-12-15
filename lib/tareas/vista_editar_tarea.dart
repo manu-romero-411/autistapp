@@ -4,7 +4,6 @@ import 'package:autistapp/inicio/ajustes.dart';
 import 'package:autistapp/tareas/lista_tareas.dart';
 import 'package:autistapp/tareas/tarea.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
@@ -77,63 +76,6 @@ class EditorTareasState extends State<EditorTareas> {
     });
   }
 
-  void _enviarNotif() async {
-    // Eliminamos la notificación anterior
-    widget._ajustes.flutNotif.cancel(_notifId);
-
-    // Configuramos los detalles de la notificación.
-    var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
-        'autistapp_chan2', 'Tareas',
-        importance: Importance.max, priority: Priority.high, showWhen: false);
-    var iOSPlatformChannelSpecifics = const DarwinNotificationDetails();
-
-    var platformChannelSpecifics = NotificationDetails(
-        android: androidPlatformChannelSpecifics,
-        iOS: iOSPlatformChannelSpecifics);
-
-    // Determinamos el intervalo de tiempo basado en el int proporcionado.
-    Duration duration;
-    switch (_notifIntervalo) {
-      case 0:
-        duration = const Duration(minutes: 30);
-        break;
-      case 1:
-        duration = const Duration(hours: 1);
-        break;
-      case 2:
-        duration = const Duration(hours: 3);
-        break;
-      case 3:
-        duration = const Duration(hours: 6);
-        break;
-      case 4:
-        duration = const Duration(days: 1);
-        break;
-      case 5:
-        duration = const Duration(days: 3);
-        break;
-      case 6:
-        duration = const Duration(days: 7);
-        break;
-      default:
-        throw ArgumentError('Intervalo no válido: $_notifIntervalo');
-    }
-
-// Calculamos la fecha y hora en que se debe mostrar la notificación.
-    var scheduledDate = tz.TZDateTime.now(tz.local).add(duration);
-
-    // Mostramos la notificación.
-    await widget._ajustes.flutNotif.zonedSchedule(
-        0,
-        '¡Tienes tareas!',
-        "${widget._ajustes.prioridadesEmoji[_prioridad]} ${_nombreController.text} (${widget._ajustes.listaAmbitos[_tipo].ambito})",
-        scheduledDate,
-        platformChannelSpecifics,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -148,7 +90,6 @@ class EditorTareasState extends State<EditorTareas> {
               color: widget._ajustes.fgColor,
               icon: const Icon(Icons.delete),
               onPressed: () {
-                widget._ajustes.flutNotif.cancel(widget._tarea?.id);
                 widget._listaTareas.eliminarTarea(widget._tarea?.id);
                 Navigator.of(context).pop();
               },
@@ -179,7 +120,6 @@ class EditorTareasState extends State<EditorTareas> {
                 0,
                 _completada,
               );
-              _enviarNotif();
               Navigator.pop(context);
             },
           ),

@@ -15,12 +15,11 @@ class VistaDiagramaTareas extends StatefulWidget {
   final MetaListaPlanes _meta;
 
   VistaDiagramaTareas(
-      {Key? key, required id, required ajustes, required nombre, required meta})
+      {super.key, required id, required ajustes, required nombre, required meta})
       : _ajustes = ajustes,
         _listaId = id,
         _meta = meta,
-        _nombre = nombre,
-        super(key: key);
+        _nombre = nombre;
 
   @override
   VistaDiagramaTareasState createState() => VistaDiagramaTareasState();
